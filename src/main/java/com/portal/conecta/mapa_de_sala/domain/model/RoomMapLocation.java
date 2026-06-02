@@ -1,17 +1,23 @@
-package com.portal.conecta.mapa_de_sala.entity;
+package com.portal.conecta.mapa_de_sala.domain.model;
 
-import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
+import com.portal.conecta.mapa_de_sala.domain.base.BaseAuditEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
 /**
- * Vincula um aprendiz a uma posição dentro de um RoomMap (RN-MS04).
+ * Vínculo aprendiz ↔ posição no mapa (RN-MS04).
  *
- * Constraints de unicidade (definidas na migration, declaradas aqui para documentação):
- *  - RN-MS10 : UNIQUE (room_map_id, student_id)       → aprendiz em no máximo uma posição por mapa
- *  - Implícita: UNIQUE (room_map_id, layout_position_id) → posição ocupada por no máximo um aprendiz
+ * Constraints de unicidade:
+ *  - RN-MS10   : UNIQUE (room_map_id, student_id)
+ *  - Implícita : UNIQUE (room_map_id, layout_position_id)
  */
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(
         name = "room_map_location",
@@ -50,29 +56,4 @@ public class RoomMapLocation extends BaseAuditEntity {
     /** FK → Hub User (aprendiz) — sem entidade JPA local */
     @Column(name = "student_id", nullable = false)
     private UUID studentId;
-
-    public RoomMapLocation() {
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public UUID getRoomMapId() { return roomMapId; }
-
-    public RoomMap getRoomMap() { return roomMap; }
-    public void setRoomMap(RoomMap roomMap) {
-        this.roomMap = roomMap;
-        this.roomMapId = roomMap != null ? roomMap.getId() : null;
-    }
-
-    public UUID getLayoutPositionId() { return layoutPositionId; }
-
-    public LayoutPosition getLayoutPosition() { return layoutPosition; }
-    public void setLayoutPosition(LayoutPosition layoutPosition) {
-        this.layoutPosition = layoutPosition;
-        this.layoutPositionId = layoutPosition != null ? layoutPosition.getId() : null;
-    }
-
-    public UUID getStudentId() { return studentId; }
-    public void setStudentId(UUID studentId) { this.studentId = studentId; }
 }

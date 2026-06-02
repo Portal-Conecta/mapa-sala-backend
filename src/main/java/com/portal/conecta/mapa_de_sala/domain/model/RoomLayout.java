@@ -1,10 +1,16 @@
-package com.portal.conecta.mapa_de_sala.entity;
+package com.portal.conecta.mapa_de_sala.domain.model;
 
-import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
+import com.portal.conecta.mapa_de_sala.domain.base.BaseAuditEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "room_layout")
 public class RoomLayout extends BaseAuditEntity {
@@ -24,21 +30,4 @@ public class RoomLayout extends BaseAuditEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "layout_template_id", nullable = false)
     private LayoutTemplate layoutTemplate;
-
-    public RoomLayout() {
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public UUID getRoomId() { return roomId; }
-    public void setRoomId(UUID roomId) { this.roomId = roomId; }
-
-    public UUID getLayoutTemplateId() { return layoutTemplateId; }
-
-    public LayoutTemplate getLayoutTemplate() { return layoutTemplate; }
-    public void setLayoutTemplate(LayoutTemplate layoutTemplate) {
-        this.layoutTemplate = layoutTemplate;
-        this.layoutTemplateId = layoutTemplate != null ? layoutTemplate.getId() : null;
-    }
 }

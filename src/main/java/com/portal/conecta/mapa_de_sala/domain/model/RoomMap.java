@@ -1,12 +1,18 @@
-package com.portal.conecta.mapa_de_sala.entity;
+package com.portal.conecta.mapa_de_sala.domain.model;
 
-import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
+import com.portal.conecta.mapa_de_sala.domain.base.BaseAuditEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "room_map")
 public class RoomMap extends BaseAuditEntity {
@@ -40,30 +46,4 @@ public class RoomMap extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "roomMap", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomMapHistory> history = new ArrayList<>();
-
-    public RoomMap() {
-    }
-
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public UUID getClassId() { return classId; }
-    public void setClassId(UUID classId) { this.classId = classId; }
-
-    public UUID getRoomId() { return roomId; }
-    public void setRoomId(UUID roomId) { this.roomId = roomId; }
-
-    public UUID getLayoutTemplateId() { return layoutTemplateId; }
-
-    public LayoutTemplate getLayoutTemplate() { return layoutTemplate; }
-    public void setLayoutTemplate(LayoutTemplate layoutTemplate) {
-        this.layoutTemplate = layoutTemplate;
-        this.layoutTemplateId = layoutTemplate != null ? layoutTemplate.getId() : null;
-    }
-
-    public List<RoomMapLocation> getLocations() { return locations; }
-    public void setLocations(List<RoomMapLocation> locations) { this.locations = locations; }
-
-    public List<RoomMapHistory> getHistory() { return history; }
-    public void setHistory(List<RoomMapHistory> history) { this.history = history; }
 }
