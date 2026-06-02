@@ -6,5 +6,5 @@ import java.util.UUID;
 
 public interface RoomMapHistoryRepository extends JpaRepository<RoomMapHistory, UUID> {
 
-    List<RoomMapHistory> findByRoomMapIdOrderByCreatedAtDesc(UUID roomMapId);
+    List<RoomMapHistory> findByRoomMapIdOrderByCreatedAtDesc(UUID roomMap);
 }
