@@ -1,4 +1,4 @@
-package com.portal.conecta.mapa_de_sala.config;
+package com.portal.conecta.mapa_de_sala.shared.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
-@EnableJpaRepositories(basePackages = "com.portal.conecta.mapa_de_sala")
+@EnableJpaRepositories(basePackages = "com.portal.conecta.mapa_de_sala.module.seat_map.domain.port")
 public class JpaConfig {
 
     /**

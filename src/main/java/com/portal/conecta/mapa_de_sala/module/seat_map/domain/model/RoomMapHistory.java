@@ -1,7 +1,7 @@
-package com.portal.conecta.mapa_de_sala.domain.model;
+package com.portal.conecta.mapa_de_sala.module.seat_map.domain.model;
 
-import com.portal.conecta.mapa_de_sala.domain.base.BaseAuditEntity;
-import com.portal.conecta.mapa_de_sala.domain.enums.RoomMapHistoryAction;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.base.BaseAuditEntity;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.RoomMapHistoryAction;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
