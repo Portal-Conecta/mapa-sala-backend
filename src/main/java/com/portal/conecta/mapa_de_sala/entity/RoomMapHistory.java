@@ -1,5 +1,6 @@
 package com.portal.conecta.mapa_de_sala.entity;
 
+import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
 import com.portal.conecta.mapa_de_sala.entity.enums.RoomMapHistoryAction;
 import jakarta.persistence.*;
 
@@ -10,7 +11,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "mapa_sala_historico")
-public class RoomMapHistory {
+public class RoomMapHistory extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,6 +25,7 @@ public class RoomMapHistory {
     @JoinColumn(name = "room_map_id", nullable = false)
     private RoomMap roomMap;
 
+    /** FK → Hub User (docente/operador que realizou a ação) */
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
@@ -32,7 +34,7 @@ public class RoomMapHistory {
     private RoomMapHistoryAction action;
 
     /**
-     * Descrição livre da alteração. Armazenado como texto longo.
+     * Descrição livre da alteração em texto longo.
      * Ex.: "João movido da posição A3 para B5".
      * Não usar jsonb — campo texto simples conforme especificação.
      */
@@ -43,48 +45,23 @@ public class RoomMapHistory {
     public RoomMapHistory() {
     }
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public UUID getRoomMapId() { return roomMapId; }
 
-    public UUID getRoomMapId() {
-        return roomMapId;
-    }
-
-    public RoomMap getRoomMap() {
-        return roomMap;
-    }
-
+    public RoomMap getRoomMap() { return roomMap; }
     public void setRoomMap(RoomMap roomMap) {
         this.roomMap = roomMap;
         this.roomMapId = roomMap != null ? roomMap.getId() : null;
     }
 
-    public UUID getUserId() {
-        return userId;
-    }
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
+    public RoomMapHistoryAction getAction() { return action; }
+    public void setAction(RoomMapHistoryAction action) { this.action = action; }
 
-    public RoomMapHistoryAction getAction() {
-        return action;
-    }
-
-    public void setAction(RoomMapHistoryAction action) {
-        this.action = action;
-    }
-
-    public String getDetails() {
-        return details;
-    }
-
-    public void setDetails(String details) {
-        this.details = details;
-    }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 }

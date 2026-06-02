@@ -1,5 +1,6 @@
 package com.portal.conecta.mapa_de_sala.entity;
 
+import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
 import com.portal.conecta.mapa_de_sala.entity.enums.LayoutPositionType;
 import jakarta.persistence.*;
 
@@ -7,7 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "layout_position")
-public class LayoutPosition {
+public class LayoutPosition extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -34,48 +35,23 @@ public class LayoutPosition {
     public LayoutPosition() {
     }
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public UUID getLayoutTemplateId() { return layoutTemplateId; }
 
-    public UUID getLayoutTemplateId() {
-        return layoutTemplateId;
-    }
-
-    public LayoutTemplate getLayoutTemplate() {
-        return layoutTemplate;
-    }
-
+    public LayoutTemplate getLayoutTemplate() { return layoutTemplate; }
     public void setLayoutTemplate(LayoutTemplate layoutTemplate) {
         this.layoutTemplate = layoutTemplate;
         this.layoutTemplateId = layoutTemplate != null ? layoutTemplate.getId() : null;
     }
 
-    public Integer getPositionX() {
-        return positionX;
-    }
+    public Integer getPositionX() { return positionX; }
+    public void setPositionX(Integer positionX) { this.positionX = positionX; }
 
-    public void setPositionX(Integer positionX) {
-        this.positionX = positionX;
-    }
+    public Integer getPositionY() { return positionY; }
+    public void setPositionY(Integer positionY) { this.positionY = positionY; }
 
-    public Integer getPositionY() {
-        return positionY;
-    }
-
-    public void setPositionY(Integer positionY) {
-        this.positionY = positionY;
-    }
-
-    public LayoutPositionType getType() {
-        return type;
-    }
-
-    public void setType(LayoutPositionType type) {
-        this.type = type;
-    }
+    public LayoutPositionType getType() { return type; }
+    public void setType(LayoutPositionType type) { this.type = type; }
 }

@@ -1,6 +1,6 @@
 package com.portal.conecta.mapa_de_sala.entity;
 
-import com.portal.conecta.mapa_de_sala.entity.enums.LayoutPositionType;
+import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "layout_template")
-public class LayoutTemplate {
+public class LayoutTemplate extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -40,67 +40,27 @@ public class LayoutTemplate {
     public LayoutTemplate() {
     }
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public Integer getDimensionX() { return dimensionX; }
+    public void setDimensionX(Integer dimensionX) { this.dimensionX = dimensionX; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Integer getDimensionY() { return dimensionY; }
+    public void setDimensionY(Integer dimensionY) { this.dimensionY = dimensionY; }
 
-    public Integer getDimensionX() {
-        return dimensionX;
-    }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
-    public void setDimensionX(Integer dimensionX) {
-        this.dimensionX = dimensionX;
-    }
+    public List<LayoutPosition> getPositions() { return positions; }
+    public void setPositions(List<LayoutPosition> positions) { this.positions = positions; }
 
-    public Integer getDimensionY() {
-        return dimensionY;
-    }
+    public List<RoomLayout> getRoomLayouts() { return roomLayouts; }
+    public void setRoomLayouts(List<RoomLayout> roomLayouts) { this.roomLayouts = roomLayouts; }
 
-    public void setDimensionY(Integer dimensionY) {
-        this.dimensionY = dimensionY;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public List<LayoutPosition> getPositions() {
-        return positions;
-    }
-
-    public void setPositions(List<LayoutPosition> positions) {
-        this.positions = positions;
-    }
-
-    public List<RoomLayout> getRoomLayouts() {
-        return roomLayouts;
-    }
-
-    public void setRoomLayouts(List<RoomLayout> roomLayouts) {
-        this.roomLayouts = roomLayouts;
-    }
-
-    public List<RoomMap> getRoomMaps() {
-        return roomMaps;
-    }
-
-    public void setRoomMaps(List<RoomMap> roomMaps) {
-        this.roomMaps = roomMaps;
-    }
+    public List<RoomMap> getRoomMaps() { return roomMaps; }
+    public void setRoomMaps(List<RoomMap> roomMaps) { this.roomMaps = roomMaps; }
 }

@@ -1,5 +1,7 @@
 package com.portal.conecta.mapa_de_sala.entity.enums;
 
-public class RoomMapHistoryAction {
-    
+public enum RoomMapHistoryAction {
+    MAP_CREATION,
+    STUDENT_MOVED,
+    MAP_REPLICATED
 }

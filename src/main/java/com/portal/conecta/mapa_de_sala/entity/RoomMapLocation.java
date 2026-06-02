@@ -1,15 +1,16 @@
 package com.portal.conecta.mapa_de_sala.entity;
 
+import com.portal.conecta.mapa_de_sala.entity.base.BaseAuditEntity;
 import jakarta.persistence.*;
 
 import java.util.UUID;
 
 /**
- * Vincula um aprendiz a uma posição dentro de um RoomMap.
+ * Vincula um aprendiz a uma posição dentro de um RoomMap (RN-MS04).
  *
- * Constraints de unicidade (definidas na migration, refletidas aqui):
- *  - RN-MS10: UNIQUE (room_map_id, student_id)   → um aprendiz não ocupa duas posições no mesmo mapa
- *  - Implícita: UNIQUE (room_map_id, layout_position_id) → dois aprendizes não na mesma posição
+ * Constraints de unicidade (definidas na migration, declaradas aqui para documentação):
+ *  - RN-MS10 : UNIQUE (room_map_id, student_id)       → aprendiz em no máximo uma posição por mapa
+ *  - Implícita: UNIQUE (room_map_id, layout_position_id) → posição ocupada por no máximo um aprendiz
  */
 @Entity
 @Table(
@@ -25,7 +26,7 @@ import java.util.UUID;
                 )
         }
 )
-public class RoomMapLocation {
+public class RoomMapLocation extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -46,51 +47,32 @@ public class RoomMapLocation {
     @JoinColumn(name = "layout_position_id", nullable = false)
     private LayoutPosition layoutPosition;
 
+    /** FK → Hub User (aprendiz) — sem entidade JPA local */
     @Column(name = "student_id", nullable = false)
     private UUID studentId;
 
     public RoomMapLocation() {
     }
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public UUID getRoomMapId() { return roomMapId; }
 
-    public UUID getRoomMapId() {
-        return roomMapId;
-    }
-
-    public RoomMap getRoomMap() {
-        return roomMap;
-    }
-
+    public RoomMap getRoomMap() { return roomMap; }
     public void setRoomMap(RoomMap roomMap) {
         this.roomMap = roomMap;
         this.roomMapId = roomMap != null ? roomMap.getId() : null;
     }
 
-    public UUID getLayoutPositionId() {
-        return layoutPositionId;
-    }
+    public UUID getLayoutPositionId() { return layoutPositionId; }
 
-    public LayoutPosition getLayoutPosition() {
-        return layoutPosition;
-    }
-
+    public LayoutPosition getLayoutPosition() { return layoutPosition; }
     public void setLayoutPosition(LayoutPosition layoutPosition) {
         this.layoutPosition = layoutPosition;
         this.layoutPositionId = layoutPosition != null ? layoutPosition.getId() : null;
     }
 
-    public UUID getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(UUID studentId) {
-        this.studentId = studentId;
-    }
+    public UUID getStudentId() { return studentId; }
+    public void setStudentId(UUID studentId) { this.studentId = studentId; }
 }
