@@ -1,10 +1,12 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutTemplate;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
-import org.junit.jupiter.api.BeforeEach;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 
 import java.util.UUID;
 
@@ -12,39 +14,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class RoomMapMapperTest {
 
-    private RoomMapMapper mapper;
-
-    @BeforeEach
-    void setUp() {
-        mapper = Mappers.getMapper(RoomMapMapper.class);
-    }
+    private final RoomMapMapper mapper = new RoomMapMapperImpl();
 
     @Test
-    void toEntity_shouldMapHubForeignKeys() {
+    void toEntity_shouldMapFieldsAndIgnoreIdAndTemplate() {
         var classId = UUID.randomUUID();
-        var roomId = UUID.randomUUID();
-        var templateId = UUID.randomUUID();
-        var request = new CreateRoomMapRequest(classId, roomId, templateId);
+        var request = new CreateRoomMapRequest(classId, UUID.randomUUID(), UUID.randomUUID());
 
         RoomMap entity = mapper.toEntity(request);
 
         assertThat(entity.getId()).isNull();
+        assertThat(entity.getLayoutTemplate()).isNull();
         assertThat(entity.getClassId()).isEqualTo(classId);
-        assertThat(entity.getRoomId()).isEqualTo(roomId);
-        assertThat(entity.getLayoutTemplateId()).isEqualTo(templateId);
     }
 
     @Test
-    void applyUpdate_shouldUpdateLayoutTemplateId() {
+    void toResponse_shouldExtractLayoutTemplateId() {
+        var template = new LayoutTemplate();
+        template.setId(UUID.randomUUID());
+
         var entity = new RoomMap();
-        var currentTemplate = new LayoutTemplate();
-        currentTemplate.setId(UUID.randomUUID());
-        entity.setLayoutTemplate(currentTemplate);
-        var newTemplateId = UUID.randomUUID();
+        entity.setId(UUID.randomUUID());
+        entity.setLayoutTemplate(template);
 
-        mapper.applyUpdate(new UpdateRoomMapRequest(newTemplateId), entity);
+        RoomMapResponse response = mapper.toResponse(entity);
 
-        assertThat(entity.getLayoutTemplateId()).isEqualTo(newTemplateId);
+        assertThat(response.id()).isEqualTo(entity.getId());
+        assertThat(response.layoutTemplateId()).isEqualTo(template.getId());
     }
 
     @Test

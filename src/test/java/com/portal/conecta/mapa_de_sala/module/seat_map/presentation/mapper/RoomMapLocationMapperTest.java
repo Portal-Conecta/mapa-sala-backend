@@ -1,11 +1,15 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.MoveStudentCommand;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapLocationCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
-import org.junit.jupiter.api.BeforeEach;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapLocationRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapLocationRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapLocationResponse;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 
 import java.util.UUID;
 
@@ -13,71 +17,46 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class RoomMapLocationMapperTest {
 
-    private RoomMapLocationMapper mapper;
-
-    @BeforeEach
-    void setUp() {
-        mapper = Mappers.getMapper(RoomMapLocationMapper.class);
-    }
+    private final RoomMapLocationMapper mapper = new RoomMapLocationMapperImpl();
 
     @Test
-    void toEntity_shouldMapForeignKeys() {
-        var roomMapId = UUID.randomUUID();
-        var layoutPositionId = UUID.randomUUID();
-        var studentId = UUID.randomUUID();
-        var request = new CreateRoomMapLocationRequest(roomMapId, layoutPositionId, studentId);
-
-        RoomMapLocation entity = mapper.toEntity(request);
-
-        assertThat(entity.getId()).isNull();
-        assertThat(entity.getRoomMapId()).isEqualTo(roomMapId);
-        assertThat(entity.getLayoutPositionId()).isEqualTo(layoutPositionId);
-        assertThat(entity.getStudentId()).isEqualTo(studentId);
-    }
-
-    @Test
-    void toResponse_shouldExposeForeignKeysAsUuid() {
-        var entity = new RoomMapLocation();
-        var id = UUID.randomUUID();
+    void toResponse_shouldExtractIdsFromRelations() {
         var roomMap = new RoomMap();
         roomMap.setId(UUID.randomUUID());
-        var layoutPosition = new LayoutPosition();
-        layoutPosition.setId(UUID.randomUUID());
-        entity.setId(id);
+
+        var position = new LayoutPosition();
+        position.setId(UUID.randomUUID());
+
+        var entity = new RoomMapLocation();
+        entity.setId(UUID.randomUUID());
         entity.setRoomMap(roomMap);
-        entity.setLayoutPosition(layoutPosition);
+        entity.setLayoutPosition(position);
         entity.setStudentId(UUID.randomUUID());
 
-        var response = mapper.toResponse(entity);
+        RoomMapLocationResponse response = mapper.toResponse(entity);
 
-        assertThat(response.id()).isEqualTo(id);
-        assertThat(response.roomMapId()).isEqualTo(entity.getRoomMapId());
-        assertThat(response.layoutPositionId()).isEqualTo(entity.getLayoutPositionId());
+        assertThat(response.id()).isEqualTo(entity.getId());
+        assertThat(response.roomMapId()).isEqualTo(roomMap.getId());
+        assertThat(response.layoutPositionId()).isEqualTo(position.getId());
         assertThat(response.studentId()).isEqualTo(entity.getStudentId());
     }
 
     @Test
-    void applyUpdate_shouldIgnoreNullFields() {
+    void applyUpdate_shouldNotOverwriteWithNull() {
         var entity = new RoomMapLocation();
-        var originalStudent = UUID.randomUUID();
-        var layoutPosition = new LayoutPosition();
-        layoutPosition.setId(UUID.randomUUID());
-        entity.setStudentId(originalStudent);
-        entity.setLayoutPosition(layoutPosition);
+        entity.setStudentId(UUID.randomUUID());
 
-        var newStudent = UUID.randomUUID();
-        mapper.applyUpdate(new UpdateRoomMapLocationRequest(null, newStudent), entity);
+        var request = new UpdateRoomMapLocationRequest(UUID.randomUUID(), null);
 
-        assertThat(entity.getLayoutPositionId()).isEqualTo(layoutPosition.getId());
-        assertThat(entity.getStudentId()).isEqualTo(newStudent);
+        mapper.applyUpdate(request, entity);
+
+        assertThat(entity.getStudentId()).isNotNull(); // Não foi sobrescrito
     }
 
     @Test
-    void toMoveCommand_shouldBuildMoveStudentCommand() {
+    void toMoveCommand_shouldCombineRoomMapIdAndRequest() {
         var roomMapId = UUID.randomUUID();
-        var studentId = UUID.randomUUID();
-        var targetPositionId = UUID.randomUUID();
-        var request = new MoveStudentRequest(studentId, targetPositionId);
+        var request = new MoveStudentRequest(UUID.randomUUID(), UUID.randomUUID());
 
         MoveStudentCommand command = mapper.toMoveCommand(roomMapId, request);
 

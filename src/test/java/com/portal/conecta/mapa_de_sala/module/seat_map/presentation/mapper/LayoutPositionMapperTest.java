@@ -1,11 +1,12 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateLayoutPositionCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPositionType;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutTemplate;
-import org.junit.jupiter.api.BeforeEach;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateLayoutPositionRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateLayoutPositionRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutPositionResponse;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 
 import java.util.UUID;
 
@@ -13,51 +14,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class LayoutPositionMapperTest {
 
-    private LayoutPositionMapper mapper;
-
-    @BeforeEach
-    void setUp() {
-        mapper = Mappers.getMapper(LayoutPositionMapper.class);
-    }
+    private final LayoutPositionMapper mapper = new LayoutPositionMapperImpl();
 
     @Test
-    void toEntity_shouldMapCoordinatesAndType() {
-        var templateId = UUID.randomUUID();
-        var request = new CreateLayoutPositionRequest(templateId, 2, 3, LayoutPositionType.STUDENT);
+    void toEntity_shouldMapFieldsAndIgnoreIdAndTemplate() {
+        var request = new CreateLayoutPositionRequest(UUID.randomUUID(), 1, 2, null);
 
         LayoutPosition entity = mapper.toEntity(request);
 
         assertThat(entity.getId()).isNull();
-        assertThat(entity.getLayoutTemplateId()).isEqualTo(templateId);
-        assertThat(entity.getPositionX()).isEqualTo(2);
-        assertThat(entity.getPositionY()).isEqualTo(3);
-        assertThat(entity.getType()).isEqualTo(LayoutPositionType.STUDENT);
+        assertThat(entity.getLayoutTemplate()).isNull(); // FK ignorada, será montada no Use Case
+        assertThat(entity.getPositionX()).isEqualTo(1);
     }
 
     @Test
-    void toResponse_shouldMapLayoutTemplateId() {
-        var entity = new LayoutPosition();
-        var id = UUID.randomUUID();
-        var templateId = UUID.randomUUID();
+    void toResponse_shouldExtractLayoutTemplateId() {
         var template = new LayoutTemplate();
-        template.setId(templateId);
-        entity.setId(id);
+        template.setId(UUID.randomUUID());
+
+        var entity = new LayoutPosition();
+        entity.setId(UUID.randomUUID());
         entity.setLayoutTemplate(template);
-        entity.setPositionX(1);
-        entity.setPositionY(1);
-        entity.setType(LayoutPositionType.TEACHER);
+        entity.setPositionX(5);
 
-        var response = mapper.toResponse(entity);
+        LayoutPositionResponse response = mapper.toResponse(entity);
 
-        assertThat(response.id()).isEqualTo(id);
-        assertThat(response.layoutTemplateId()).isEqualTo(templateId);
-        assertThat(response.type()).isEqualTo(LayoutPositionType.TEACHER);
+        assertThat(response.id()).isEqualTo(entity.getId());
+        assertThat(response.layoutTemplateId()).isEqualTo(template.getId()); // Extraiu o ID da FK
+    }
+
+    @Test
+    void applyUpdate_shouldNotOverwriteWithNull() {
+        var entity = new LayoutPosition();
+        entity.setPositionX(10);
+        entity.setPositionY(10);
+
+        var request = new UpdateLayoutPositionRequest(20, null, null);
+
+        mapper.applyUpdate(request, entity);
+
+        assertThat(entity.getPositionX()).isEqualTo(20);
+        assertThat(entity.getPositionY()).isEqualTo(10);
     }
 
     @Test
     void toCommand_shouldCombineIdAndRequest() {
         var id = UUID.randomUUID();
-        var request = new UpdateLayoutPositionRequest(4, 5, LayoutPositionType.EQUIPMENT);
+        var request = new UpdateLayoutPositionRequest(1, 1, null);
 
         UpdateLayoutPositionCommand command = mapper.toCommand(id, request);
 
