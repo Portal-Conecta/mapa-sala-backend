@@ -1,6 +1,6 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPositionType;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
