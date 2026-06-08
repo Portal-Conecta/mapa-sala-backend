@@ -2,7 +2,7 @@ spring:
   application:
     name: seat-map
   profiles:
-    default: dev
+    active: dev
   jpa:
     open-in-view: false
   flyway:
