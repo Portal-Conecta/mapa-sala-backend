@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import com.portal.conecta.mapa_de_sala.shared.integration.hub.HubRoomFeignClient;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 
 /**
  * Smoke test: verifica que o contexto Spring/JPA sobe sem erros de mapeamento.
@@ -16,7 +16,7 @@ import com.portal.conecta.mapa_de_sala.shared.integration.hub.HubRoomFeignClient
 class MapaDeSalaApplicationTests {
 
     @MockitoBean
-    private HubRoomFeignClient hubRoomFeignClient;
+    private HubRoomPort hubRoomPort;
 
     @Test
     void contextLoads() {

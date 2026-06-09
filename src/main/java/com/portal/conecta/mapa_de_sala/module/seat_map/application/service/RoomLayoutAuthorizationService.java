@@ -18,6 +18,10 @@ public class RoomLayoutAuthorizationService {
     }
 
     public void checkReadAccess(RequestContext user, UUID roomId) {
+        if (user == null) {
+            throw new AccessDeniedException("Acesso negado à sala solicitada");
+        }
+
         if (isGlobalProfile(user.userType())) {
             return;
         }
