@@ -1,8 +1,8 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.service;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
-import com.portal.conecta.mapa_de_sala.shared.security.AuthenticatedUser;
-import com.portal.conecta.mapa_de_sala.shared.security.UserProfile;
+import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
+import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -35,7 +36,7 @@ class RoomLayoutAuthorizationServiceTest {
 
     @Test
     void checkReadAccess_shouldAllowGlobalProfilesWithoutHubCheck() {
-        var user = new AuthenticatedUser(userId, UserProfile.PERFIL_SENAI);
+        var user = new RequestContext(userId, TypeUser.SENAI, List.of());
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
                 .doesNotThrowAnyException();
@@ -45,7 +46,7 @@ class RoomLayoutAuthorizationServiceTest {
 
     @Test
     void checkReadAccess_shouldAllowLinkedAprendiz() {
-        var user = new AuthenticatedUser(userId, UserProfile.APRENDIZ);
+        var user = new RequestContext(userId, TypeUser.STUDENT, List.of());
         when(hubRoomPort.isUserLinkedToRoom(userId, roomId)).thenReturn(true);
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
@@ -54,7 +55,7 @@ class RoomLayoutAuthorizationServiceTest {
 
     @Test
     void checkReadAccess_shouldDenyUnlinkedDocente() {
-        var user = new AuthenticatedUser(userId, UserProfile.DOCENTE);
+        var user = new RequestContext(userId, TypeUser.TEACHER, List.of());
         when(hubRoomPort.isUserLinkedToRoom(userId, roomId)).thenReturn(false);
 
         assertThatThrownBy(() -> authorizationService.checkReadAccess(user, roomId))

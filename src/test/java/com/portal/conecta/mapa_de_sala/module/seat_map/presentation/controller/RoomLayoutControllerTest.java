@@ -7,25 +7,26 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.Resource
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutPositionItemResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutTemplateWithPositionsResponse;
-import com.portal.conecta.mapa_de_sala.shared.config.SecurityConfig;
+import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
+import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 import com.portal.conecta.mapa_de_sala.shared.exception.GlobalExceptionHandler;
-import com.portal.conecta.mapa_de_sala.shared.security.JwtAuthenticationFilter;
-import com.portal.conecta.mapa_de_sala.shared.security.SecurityContextAccessor;
-import com.portal.conecta.mapa_de_sala.shared.security.UserProfile;
+import com.portal.conecta.mapa_de_sala.shared.security.config.SecurityConfig;
+import com.portal.conecta.mapa_de_sala.shared.security.filter.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.UUID;
 
-import static com.portal.conecta.mapa_de_sala.shared.security.JwtAuthenticationFilter.USER_ID_HEADER;
-import static com.portal.conecta.mapa_de_sala.shared.security.JwtAuthenticationFilter.USER_PROFILE_HEADER;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,7 +35,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         SecurityConfig.class,
         JwtAuthenticationFilter.class,
-        SecurityContextAccessor.class,
         GlobalExceptionHandler.class,
         RoomLayoutAuthorizationService.class
 })
@@ -53,12 +53,18 @@ class RoomLayoutControllerTest {
     private final UUID userId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private final UUID templateId = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
+    private UsernamePasswordAuthenticationToken authFor(TypeUser type) {
+        var context = new RequestContext(userId, type, List.of());
+        return new UsernamePasswordAuthenticationToken(
+                context, null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + type.name()))
+        );
+    }
+
     @Test
     void getBySalaId_shouldReturn200WhenUserHasAccessAndLayoutExists() throws Exception {
         var response = new LayoutTemplateWithPositionsResponse(
-                templateId,
-                10,
-                10,
+                templateId, 10, 10,
                 List.of(new LayoutPositionItemResponse(0, 1, LayoutPositionType.STUDENT))
         );
 
@@ -66,8 +72,7 @@ class RoomLayoutControllerTest {
         when(getRoomLayoutByRoomIdUseCase.execute(roomId)).thenReturn(response);
 
         mockMvc.perform(get("/api/layouts/salas/{salaId}", roomId)
-                        .header(USER_ID_HEADER, userId)
-                        .header(USER_PROFILE_HEADER, UserProfile.APRENDIZ))
+                        .with(authentication(authFor(TypeUser.STUDENT))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.layoutTemplateId").value(templateId.toString()))
                 .andExpect(jsonPath("$.dimensionX").value(10))
@@ -82,12 +87,10 @@ class RoomLayoutControllerTest {
     @Test
     void getBySalaId_shouldReturn200ForGlobalProfileWithoutClassLink() throws Exception {
         var response = new LayoutTemplateWithPositionsResponse(templateId, 5, 5, List.of());
-
         when(getRoomLayoutByRoomIdUseCase.execute(roomId)).thenReturn(response);
 
         mockMvc.perform(get("/api/layouts/salas/{salaId}", roomId)
-                        .header(USER_ID_HEADER, userId)
-                        .header(USER_PROFILE_HEADER, UserProfile.ADMINISTRADOR))
+                        .with(authentication(authFor(TypeUser.ADMIN))))
                 .andExpect(status().isOk());
     }
 
@@ -98,8 +101,7 @@ class RoomLayoutControllerTest {
                 .thenThrow(new ResourceNotFoundException("Sala", roomId));
 
         mockMvc.perform(get("/api/layouts/salas/{salaId}", roomId)
-                        .header(USER_ID_HEADER, userId)
-                        .header(USER_PROFILE_HEADER, UserProfile.DOCENTE))
+                        .with(authentication(authFor(TypeUser.TEACHER))))
                 .andExpect(status().isNotFound());
     }
 
@@ -110,8 +112,7 @@ class RoomLayoutControllerTest {
                 .thenThrow(new ResourceNotFoundException("Layout da sala", roomId));
 
         mockMvc.perform(get("/api/layouts/salas/{salaId}", roomId)
-                        .header(USER_ID_HEADER, userId)
-                        .header(USER_PROFILE_HEADER, UserProfile.DOCENTE))
+                        .with(authentication(authFor(TypeUser.TEACHER))))
                 .andExpect(status().isNotFound());
     }
 
@@ -120,8 +121,7 @@ class RoomLayoutControllerTest {
         when(hubRoomPort.isUserLinkedToRoom(userId, roomId)).thenReturn(false);
 
         mockMvc.perform(get("/api/layouts/salas/{salaId}", roomId)
-                        .header(USER_ID_HEADER, userId)
-                        .header(USER_PROFILE_HEADER, UserProfile.APRENDIZ))
+                        .with(authentication(authFor(TypeUser.STUDENT))))
                 .andExpect(status().isForbidden());
     }
 
@@ -130,8 +130,7 @@ class RoomLayoutControllerTest {
         when(hubRoomPort.isUserLinkedToRoom(userId, roomId)).thenReturn(false);
 
         mockMvc.perform(get("/api/layouts/salas/{salaId}", roomId)
-                        .header(USER_ID_HEADER, userId)
-                        .header(USER_PROFILE_HEADER, UserProfile.DOCENTE))
+                        .with(authentication(authFor(TypeUser.TEACHER))))
                 .andExpect(status().isForbidden());
     }
 
