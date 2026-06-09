@@ -13,20 +13,18 @@ public class OpenApiConfig {
 
     public static final String BEARER_AUTH_SCHEME = "bearerAuth";
 
-	@Bean
-	public OpenAPI customOpenAPI() {
-		return new OpenAPI()
-			.info(new Info()
-				.title("Backend Mapa de Sala - Portal Conecta")
-				.description("""
-					Backend do sistema de gerenciamento de mapas de sala para o Portal Conecta.
-					""")
-				.version("0.0.1-SNAPSHOT"))
-			.components(new Components()
-				.addSecuritySchemes(BEARER_AUTH_SCHEME, new SecurityScheme()
-						.name(BEARER_AUTH_SCHEME)
-						.type(SecurityScheme.Type.HTTP)
-						.scheme("bearer")
-						.bearerFormat("JWT")));
-	}
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+            .info(new Info()
+                .title("Backend Mapa de Sala - Portal Conecta")
+                .description("Backend do sistema de gerenciamento de mapas de sala para o Portal Conecta.")
+                .version("0.0.1-SNAPSHOT"))
+            .components(new Components()
+                .addSecuritySchemes(BEARER_AUTH_SCHEME, new SecurityScheme()
+                        .name(BEARER_AUTH_SCHEME)
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")));
+    }
 }
