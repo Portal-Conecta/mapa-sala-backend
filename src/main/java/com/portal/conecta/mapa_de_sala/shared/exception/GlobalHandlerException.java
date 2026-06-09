@@ -16,16 +16,16 @@ public class GlobalHandlerException {
         return request.getRequestURI();
     }
     
-    private ResponseEntity<ApiError> buildResponse(
+    private ResponseEntity<ApiReponseException> buildResponse(
         HttpStatus status,
         RuntimeException exception,
         HttpServletRequest request
     ) {
-        return ResponseEntity.status(status).body(ApiError.of(status, exception.getMessage(), path(request)));
+        return ResponseEntity.status(status).body(ApiReponseException.of(status, exception.getMessage(), path(request)));
     }
 
     @ExceptionHandler(UnauthorizedUserException.class)
-    public ResponseEntity<ApiError> handleUnauthorized(
+    public ResponseEntity<ApiReponseException> handleUnauthorized(
             UnauthorizedUserException exception,
             HttpServletRequest request
     ) {
