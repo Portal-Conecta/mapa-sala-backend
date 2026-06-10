@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Porta de integração com o Hub para validação de turmas e consulta de aprendizes (INT01).
+ * Porta de integração com o Hub para consulta da turma própria de um usuário.
  */
 public interface HubClassPort {
+
+    UUID getClassIdForUser(UUID userId);
 
     boolean existsById(UUID classId);
 
