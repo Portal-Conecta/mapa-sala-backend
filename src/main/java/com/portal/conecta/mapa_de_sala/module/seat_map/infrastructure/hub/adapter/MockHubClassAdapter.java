@@ -8,9 +8,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.hub.HubStudent;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
+import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.exception.HubIntegrationException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.properties.HubMockProperties;
 
 @Component
@@ -44,5 +46,19 @@ public class MockHubClassAdapter implements HubClassPort {
                 .map(student -> new HubStudent(UUID.fromString(student.id()), student.name()))
                 .sorted(Comparator.comparing(HubStudent::name, String.CASE_INSENSITIVE_ORDER))
                 .toList();
+    }
+
+    @Override
+    public UUID getClassIdForUser(UUID userId) {
+        try {
+            return properties.studentsByClass().keySet().stream()
+                .map(UUID::fromString)
+                .filter(classId -> properties.studentsByClass().get(classId.toString()).stream()
+                        .anyMatch(student -> student.id().equals(userId.toString())))
+                .findFirst()
+                .orElse(null);
+        } catch (RestClientException exception) {
+            throw new HubIntegrationException("Serviço de turmas do Hub indisponível.", exception);
+        }
     }
 }
