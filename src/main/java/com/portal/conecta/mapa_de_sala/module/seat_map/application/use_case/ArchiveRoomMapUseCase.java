@@ -29,8 +29,8 @@ public class ArchiveRoomMapUseCase {
 
         RequestContext user = requestContextProvider.getRequestContext();
 
-       if(isUserAuthorizedToArchiveRoomMap(user, roomMap)) {
-            throw new UnauthorizedUserException("User is not authorized to archive room map");
+        if (!isUserAuthorizedToArchiveRoomMap(user, roomMap)) {
+            throw new UnauthorizedUserException("Usuário não autorizado para arquivar mapa de sala");
         }
 
         roomMap.setRemovedAt(Instant.now());
