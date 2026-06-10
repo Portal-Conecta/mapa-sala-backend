@@ -1,4 +1,4 @@
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port;
+package com.portal.conecta.mapa_de_sala.module.seat_map.domain.port;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.hub.HubStudent;
 
