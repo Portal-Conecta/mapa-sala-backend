@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
+import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 import com.portal.conecta.mapa_de_sala.shared.security.user.CustomUserDetails;
 
 import io.jsonwebtoken.Claims;
@@ -28,7 +29,7 @@ public class JwtExtractToken {
         Claims claims = extractClaims(token);
 
         String userId = claims.getSubject();
-        String userType = claims.get("userType", String.class);
+        TypeUser userType = TypeUser.valueOf(claims.get("userType", String.class));
         String permissionVersion = claims.get("permissionVersion", String.class);
         List<ContextClass> classes = extractClasses(claims.get("classes"));
 

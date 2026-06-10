@@ -16,12 +16,12 @@ import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 public class CustomUserDetails implements UserDetails {
 
     private final String userId;
-    private final String userType;
+    private final TypeUser userType;
     private final List<ContextClass> classes;
     private final String permissionVersion;
     private final List<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(String userId, String userType, List<ContextClass> classes, String permissionVersion) {
+    public CustomUserDetails(String userId, TypeUser userType, List<ContextClass> classes, String permissionVersion) {
         this.userId = userId;
         this.userType = userType;
         this.classes = classes;
@@ -32,7 +32,7 @@ public class CustomUserDetails implements UserDetails {
     public RequestContext toRequestContext() {
         return new RequestContext(
                 UUID.fromString(userId),
-                TypeUser.valueOf(userType),
+                userType,
                 classes == null ? List.of() : classes
         );
     }
