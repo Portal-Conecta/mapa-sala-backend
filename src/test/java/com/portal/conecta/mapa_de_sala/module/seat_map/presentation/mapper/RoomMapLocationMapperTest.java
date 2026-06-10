@@ -1,19 +1,17 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.MoveStudentCommand;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapLocationCommand;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapLocationRequest;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapLocationRequest;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapLocationResponse;
-import org.junit.jupiter.api.Test;
-
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.MoveStudentCommand;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapLocationRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapLocationResponse;
 
 class RoomMapLocationMapperTest {
 

@@ -7,7 +7,7 @@ public record RoomMapDetailResponse(
         UUID id,
         UUID classId,
         UUID roomId,
-        UUID layoutTemplateId
-        // List<RoomMapLocationResponse> locations
+        UUID layoutTemplateId,
+        List<RoomMapLocationResponse> locations
 ) {
 }
