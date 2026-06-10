@@ -4,7 +4,8 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.Updat
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutTemplate;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateLayoutTemplateRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateLayoutTemplateRequest;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutPositionResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutPositionItemResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutTemplateResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutTemplateWithPositionsResponse;
 import org.mapstruct.BeanMapping;
@@ -50,7 +51,15 @@ public interface LayoutTemplateMapper {
         return new UpdateLayoutTemplateCommand(id, request);
     }
 
-    default LayoutTemplateWithPositionsResponse toWithPositionsResponse(LayoutTemplateResponse template, List<LayoutPositionResponse> positions) {
-        return new LayoutTemplateWithPositionsResponse(template, positions);
+    default LayoutTemplateWithPositionsResponse toWithPositionsResponse(LayoutTemplate template, List<LayoutPosition> positions) {
+        List<LayoutPositionItemResponse> items = positions.stream()
+                .map(p -> new LayoutPositionItemResponse(p.getPositionX(), p.getPositionY(), p.getType()))
+                .toList();
+        return new LayoutTemplateWithPositionsResponse(
+                template.getId(),
+                template.getDimensionX(),
+                template.getDimensionY(),
+                items
+        );
     }
 }
