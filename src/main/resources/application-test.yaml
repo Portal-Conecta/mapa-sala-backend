@@ -26,7 +26,24 @@ logging:
     root: WARN
 
 hub:
-  base-url: http://localhost:8080
+  api:
+    url: http://localhost:8080
+    mock-enabled: true
+  mock:
+    class-ids:
+      - bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+    user-ids:
+      - cccccccc-cccc-cccc-cccc-cccccccccccc
+    room-ids:
+      - 11111111-1111-1111-1111-111111111111
+    user-room-links:
+      - cccccccc-cccc-cccc-cccc-cccccccccccc:11111111-1111-1111-1111-111111111111
+    students-by-class:
+      bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb:
+        - id: dddddddd-dddd-dddd-dddd-dddddddddddd
+          name: Ana Silva
+        - id: eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee
+          name: Bruno Costa
 
 app:
   jwt:
