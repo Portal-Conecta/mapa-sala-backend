@@ -39,6 +39,9 @@ hub:
           name: Ana Silva
         - id: eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee
           name: Bruno Costa
+    accessible-class-ids-by-user:
+      cccccccc-cccc-cccc-cccc-cccccccccccc:
+        - bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
 
 app:
   jwt:
