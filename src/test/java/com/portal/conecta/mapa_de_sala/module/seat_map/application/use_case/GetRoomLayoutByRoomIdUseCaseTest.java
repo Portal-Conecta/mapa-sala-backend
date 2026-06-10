@@ -22,6 +22,8 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutTemplateRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomLayoutRepository;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutPositionItemResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutTemplateWithPositionsResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.LayoutTemplateMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,8 +79,21 @@ class GetRoomLayoutByRoomIdUseCaseTest {
         var pos1 = position(2, 0, LayoutPositionType.STUDENT);
         var pos2 = position(1, 0, LayoutPositionType.STUDENT);
         var pos3 = position(0, 1, LayoutPositionType.TEACHER);
+        var positions = List.of(pos2, pos1, pos3);
         when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(List.of(pos2, pos1, pos3));
+                .thenReturn(positions);
+
+        var expectedResponse = new LayoutTemplateWithPositionsResponse(
+                templateId,
+                10,
+                10,
+                List.of(
+                        new LayoutPositionItemResponse(1, 0, LayoutPositionType.STUDENT),
+                        new LayoutPositionItemResponse(2, 0, LayoutPositionType.STUDENT),
+                        new LayoutPositionItemResponse(0, 1, LayoutPositionType.TEACHER)
+                )
+        );
+        when(layoutTemplateMapper.toWithPositionsResponse(template, positions)).thenReturn(expectedResponse);
 
         var response = useCase.execute(roomId);
 
