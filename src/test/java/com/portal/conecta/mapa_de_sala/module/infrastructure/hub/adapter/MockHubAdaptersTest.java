@@ -4,9 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.adapter.MockHubClassAdapter;
+import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.adapter.MockHubPermissionAdapter;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.adapter.MockHubRoomAdapter;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.adapter.MockHubUserAdapter;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.properties.HubMockProperties;
+import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ class MockHubAdaptersTest {
     private MockHubRoomAdapter roomAdapter;
     private MockHubClassAdapter classAdapter;
     private MockHubUserAdapter userAdapter;
+    private MockHubPermissionAdapter permissionAdapter;
 
     @BeforeEach
     void setUp() {
@@ -40,12 +43,14 @@ class MockHubAdaptersTest {
                                 new HubMockProperties.MockStudent(STUDENT_B.toString(), "Bruno Costa"),
                                 new HubMockProperties.MockStudent(STUDENT_A.toString(), "Ana Silva")
                         )
-                )
+                ),
+                Map.of(USER_ID.toString(), List.of(CLASS_ID.toString()))
         );
 
         roomAdapter = new MockHubRoomAdapter(properties);
         classAdapter = new MockHubClassAdapter(properties);
         userAdapter = new MockHubUserAdapter(properties);
+        permissionAdapter = new MockHubPermissionAdapter(properties);
     }
 
     @Test
@@ -75,5 +80,19 @@ class MockHubAdaptersTest {
 
         assertThat(user).isPresent();
         assertThat(user.get().id()).isEqualTo(USER_ID);
+    }
+
+    @Test
+    void permissionAdapter_shouldReturnAccessibleClassesForKnownTeacher() {
+        var classIds = permissionAdapter.getAccessibleClassIds(USER_ID, TypeUser.TEACHER);
+
+        assertThat(classIds).containsExactly(CLASS_ID);
+    }
+
+    @Test
+    void permissionAdapter_shouldReturnEmptyForUnknownUserWhenMapIsConfigured() {
+        var classIds = permissionAdapter.getAccessibleClassIds(UUID.randomUUID(), TypeUser.TEACHER);
+
+        assertThat(classIds).isEmpty();
     }
 }

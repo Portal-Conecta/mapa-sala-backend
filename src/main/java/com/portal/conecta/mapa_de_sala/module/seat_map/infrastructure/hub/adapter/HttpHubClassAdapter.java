@@ -64,4 +64,19 @@ public class HttpHubClassAdapter implements HubClassPort {
             throw new HubIntegrationException("Serviço de aprendizes do Hub indisponível.", exception);
         }
     }
+
+    @Override
+    public UUID getClassIdForUser(UUID userId) {
+        try {
+            return restClient.get()
+                    .uri("/users/{userId}/class", userId)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<UUID>() {});
+        } catch (HttpClientErrorException.NotFound exception) {
+            return null;
+        } catch (RestClientException exception) {
+            throw new HubIntegrationException("Serviço de turmas do Hub indisponível.", exception);
+        }        
+    }
 }
+
