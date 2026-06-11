@@ -1,5 +1,18 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
@@ -9,20 +22,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutTemplateRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomLayoutRepository;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.LayoutTemplateMapperImpl;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.LayoutTemplateMapper;
 
 @ExtendWith(MockitoExtension.class)
 class GetRoomLayoutByRoomIdUseCaseTest {
@@ -39,6 +39,9 @@ class GetRoomLayoutByRoomIdUseCaseTest {
     @Mock
     private LayoutPositionRepository layoutPositionRepository;
 
+    @Mock
+    private LayoutTemplateMapper layoutTemplateMapper;
+
     private GetRoomLayoutByRoomIdUseCase useCase;
 
     private final UUID roomId = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -51,7 +54,7 @@ class GetRoomLayoutByRoomIdUseCaseTest {
                 roomLayoutRepository,
                 layoutTemplateRepository,
                 layoutPositionRepository,
-                new LayoutTemplateMapperImpl()
+                layoutTemplateMapper
         );
     }
 
