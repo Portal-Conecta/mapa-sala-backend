@@ -1,5 +1,27 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.controller;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
@@ -11,29 +33,6 @@ import com.portal.conecta.mapa_de_sala.shared.exception.GlobalHandlerException;
 import com.portal.conecta.mapa_de_sala.shared.exception.UnauthorizedUserException;
 import com.portal.conecta.mapa_de_sala.shared.security.exception.SecurityErrorResponseWriter;
 import com.portal.conecta.mapa_de_sala.shared.security.token.JwtExtractToken;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoomMapController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -52,13 +51,13 @@ class RoomMapControllerTest {
     private RequestContextProvider requestContextProvider;
 
     @MockitoBean
+    private ArchiveRoomMapUseCase archiveRoomMapUseCase;
+
+    @MockitoBean
     private JwtExtractToken jwtExtractToken;
 
     @MockitoBean
     private SecurityErrorResponseWriter securityErrorResponseWriter;
-
-    @MockitoBean
-    private ArchiveRoomMapUseCase archiveRoomMapUseCase;
 
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
@@ -140,4 +139,4 @@ class RoomMapControllerTest {
 }
 
 
-}
+
