@@ -7,6 +7,9 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +18,10 @@ public interface RoomMapHistoryMapper {
 
     @Mapping(source = "roomMap.id", target = "roomMapId")
     RoomMapHistoryResponse toResponse(RoomMapHistory entity);
+
+    default LocalDateTime map(Instant instant) {
+        return instant == null ? null : LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
 
     List<RoomMapHistoryResponse> toResponseList(List<RoomMapHistory> entities);
 
