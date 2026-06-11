@@ -45,13 +45,13 @@ class RoomMapControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
+    private ArchiveRoomMapUseCase archiveRoomMapUseCase;
+  
+    @MockitoBean
     private ListRoomMapsUseCase listRoomMapsUseCase;
 
     @MockitoBean
     private RequestContextProvider requestContextProvider;
-
-    @MockitoBean
-    private ArchiveRoomMapUseCase archiveRoomMapUseCase;
 
     @MockitoBean
     private JwtExtractToken jwtExtractToken;
@@ -59,6 +59,36 @@ class RoomMapControllerTest {
     @MockitoBean
     private SecurityErrorResponseWriter securityErrorResponseWriter;
 
+    private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+    @Test
+    void archive_shouldReturn204WhenSuccessful() throws Exception {
+        doNothing().when(archiveRoomMapUseCase).execute(mapId);
+
+        mockMvc.perform(patch("/api/mapas/{id}", mapId))
+                .andExpect(status().isNoContent());
+
+        verify(archiveRoomMapUseCase).execute(mapId);
+    }
+
+    @Test
+    void archive_shouldReturn404WhenMapNotFound() throws Exception {
+        doThrow(new ResourceNotFoundException("Mapa de sala", mapId))
+                .when(archiveRoomMapUseCase).execute(mapId);
+
+        mockMvc.perform(patch("/api/mapas/{id}", mapId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void archive_shouldReturn401WhenUserIsNotAuthorized() throws Exception {
+        doThrow(new UnauthorizedUserException("Usuário não autorizado para arquivar mapa de sala"))
+                .when(archiveRoomMapUseCase).execute(mapId);
+
+        mockMvc.perform(patch("/api/mapas/{id}", mapId))
+                .andExpect(status().isUnauthorized());
+    }
+  
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Test
@@ -105,36 +135,6 @@ class RoomMapControllerTest {
 
     private Page<RoomMapSummaryResponse> emptyPage() {
         return new PageImpl<>(List.of());
-    }
-
-    private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-
-    @Test
-    void archive_shouldReturn204WhenSuccessful() throws Exception {
-        doNothing().when(archiveRoomMapUseCase).execute(mapId);
-
-        mockMvc.perform(patch("/api/mapas/{id}", mapId))
-                .andExpect(status().isNoContent());
-
-        verify(archiveRoomMapUseCase).execute(mapId);
-    }
-
-    @Test
-    void archive_shouldReturn404WhenMapNotFound() throws Exception {
-        doThrow(new ResourceNotFoundException("Mapa de sala", mapId))
-                .when(archiveRoomMapUseCase).execute(mapId);
-
-        mockMvc.perform(patch("/api/mapas/{id}", mapId))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void archive_shouldReturn401WhenUserIsNotAuthorized() throws Exception {
-        doThrow(new UnauthorizedUserException("Usuário não autorizado para arquivar mapa de sala"))
-                .when(archiveRoomMapUseCase).execute(mapId);
-
-        mockMvc.perform(patch("/api/mapas/{id}", mapId))
-                .andExpect(status().isUnauthorized());
     }
 }
 

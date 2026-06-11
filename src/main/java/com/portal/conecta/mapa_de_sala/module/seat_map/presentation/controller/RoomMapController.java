@@ -58,8 +58,10 @@ public class RoomMapController {
         return ResponseEntity.ok(listRoomMapsUseCase.execute(user.userId(), user.userType(), salaId, pageable));
     }
 
+
     @PatchMapping("/{id}")
-    @Operation(summary = "Arquivar mapa de sala", description = "Arquiva um mapa de sala existente.")
+    @Operation(summary = "Arquivar mapa de sala", 
+               description = "Arquiva um mapa de sala existente.")
     @ApiResponse(responseCode = "204", description = "Mapa de sala arquivado com sucesso")
     @ApiResponse(responseCode = "404", description = "Mapa de sala não encontrado")
     public ResponseEntity<Void> archive(
