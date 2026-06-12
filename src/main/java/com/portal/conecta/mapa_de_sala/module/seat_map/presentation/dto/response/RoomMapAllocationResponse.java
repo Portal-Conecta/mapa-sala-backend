@@ -8,14 +8,14 @@ import java.util.UUID;
 @Schema(description = "Aluno alocado a um assento no mapa de sala")
 public record RoomMapAllocationResponse(
         UUID studentId,
-        String studenteName,
+        String studentName,
         Integer seatNumber,
         UUID layoutPositionId
 ) {
 
     public RoomMapAllocationResponse{
         Objects.requireNonNull(studentId, "studentId can't be null");
-        Objects.requireNonNull(studenteName, "studenteName can't be null");
+        Objects.requireNonNull(studentName, "studenteName can't be null");
         Objects.requireNonNull(seatNumber, "seatNumber can't be null");
         Objects.requireNonNull(layoutPositionId, "layoutPositionId can't be null");
     }
