@@ -18,7 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT) // helper estuba campos nem sempre lidos em todo teste
+@MockitoSettings(strictness = Strictness.LENIENT) // helper estuba campos nem sempre lidos emtodo teste
 class SeatNumberCalculatorTest {
 
     private final SeatNumberCalculator calculator = new SeatNumberCalculator();
