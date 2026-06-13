@@ -1,5 +1,18 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
@@ -9,20 +22,9 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutTemplateRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomLayoutRepository;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.LayoutTemplateMapperImpl;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutPositionItemResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.LayoutTemplateWithPositionsResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.LayoutTemplateMapper;
 
 @ExtendWith(MockitoExtension.class)
 class GetRoomLayoutByRoomIdUseCaseTest {
@@ -39,6 +41,9 @@ class GetRoomLayoutByRoomIdUseCaseTest {
     @Mock
     private LayoutPositionRepository layoutPositionRepository;
 
+    @Mock
+    private LayoutTemplateMapper layoutTemplateMapper;
+
     private GetRoomLayoutByRoomIdUseCase useCase;
 
     private final UUID roomId = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -51,7 +56,7 @@ class GetRoomLayoutByRoomIdUseCaseTest {
                 roomLayoutRepository,
                 layoutTemplateRepository,
                 layoutPositionRepository,
-                new LayoutTemplateMapperImpl()
+                layoutTemplateMapper
         );
     }
 
@@ -74,8 +79,21 @@ class GetRoomLayoutByRoomIdUseCaseTest {
         var pos1 = position(2, 0, LayoutPositionType.STUDENT);
         var pos2 = position(1, 0, LayoutPositionType.STUDENT);
         var pos3 = position(0, 1, LayoutPositionType.TEACHER);
+        var positions = List.of(pos2, pos1, pos3);
         when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(List.of(pos2, pos1, pos3));
+                .thenReturn(positions);
+
+        var expectedResponse = new LayoutTemplateWithPositionsResponse(
+                templateId,
+                10,
+                10,
+                List.of(
+                        new LayoutPositionItemResponse(1, 0, LayoutPositionType.STUDENT),
+                        new LayoutPositionItemResponse(2, 0, LayoutPositionType.STUDENT),
+                        new LayoutPositionItemResponse(0, 1, LayoutPositionType.TEACHER)
+                )
+        );
+        when(layoutTemplateMapper.toWithPositionsResponse(template, positions)).thenReturn(expectedResponse);
 
         var response = useCase.execute(roomId);
 

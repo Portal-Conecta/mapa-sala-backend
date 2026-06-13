@@ -1,18 +1,19 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.domain.base;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
-import lombok.Getter;
-import lombok.Setter;
+import java.time.Instant;
+import java.util.UUID;
+
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.MappedSuperclass;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -22,18 +23,21 @@ public abstract class BaseAuditEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     /**
      * Soft delete: null indica registro ativo.
      * Preenchido manualmente pelo service.
      */
     @Column(name = "removed_at")
-    private LocalDateTime removedAt;
+    private Instant removedAt;
+
+    @Column(name = "removed_by")
+    private UUID removedBy;
 
     @CreatedBy
     @Column(name = "created_by", updatable = false)

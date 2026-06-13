@@ -3,6 +3,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.respons
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Schema(description = "Registro de histórico de alterações em um mapa de sala")
@@ -17,7 +18,6 @@ public record RoomMapHistoryResponse(
         String action,
         @Schema(description = "Detalhes da alteração")
         String details,
-        @Schema(description = "Data de criação do registro")
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
 }
