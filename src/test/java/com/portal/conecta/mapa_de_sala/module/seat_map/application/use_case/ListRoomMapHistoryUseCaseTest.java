@@ -23,7 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -115,7 +115,7 @@ class ListRoomMapHistoryUseCaseTest {
     @Test
     void execute_shouldThrow404WhenMapIsArchived() {
         RoomMap roomMap = activeRoomMap();
-        ReflectionTestUtils.setField(roomMap, "removedAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(roomMap, "removedAt", Instant.now());
 
         when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
 
@@ -170,7 +170,7 @@ class ListRoomMapHistoryUseCaseTest {
                 userId,
                 "MAP_CREATION",
                 "Mapa criado",
-                LocalDateTime.now()
+                Instant.now()
         );
     }
 }
