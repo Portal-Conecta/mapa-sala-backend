@@ -44,9 +44,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
@@ -73,6 +77,9 @@ class RoomMapControllerTest {
 
     @MockitoBean
     private ListRoomMapHistoryUseCase listRoomMapHistoryUseCase;
+
+    @MockitoBean
+    private GetRoomMapViewUseCase getRoomMapViewUseCase;
 
     @MockitoBean
     private RequestContextProvider requestContextProvider;
@@ -213,6 +220,74 @@ class RoomMapControllerTest {
 
         mockMvc.perform(get("/api/mapas"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getView_shouldReturn200WithSavedMapForAprendiz() throws Exception {
+        UUID salaId = UUID.randomUUID();
+        UUID turmaId = UUID.randomUUID();
+
+        when(requestContextProvider.getRequestContext())
+                .thenReturn(new RequestContext(userId, TypeUser.STUDENT, List.of()));
+        when(getRoomMapViewUseCase.execute(salaId, turmaId))
+                .thenReturn(savedMapView());
+
+        mockMvc.perform(get("/api/mapas/salas/{salaId}/turmas/{turmaId}", salaId, turmaId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getView_shouldReturn200WithSuggestionWhenNoSavedMap() throws Exception {
+        UUID salaId = UUID.randomUUID();
+        UUID turmaId = UUID.randomUUID();
+
+        when(requestContextProvider.getRequestContext())
+                .thenReturn(new RequestContext(userId, TypeUser.TEACHER, List.of()));
+        when(getRoomMapViewUseCase.execute(salaId, turmaId))
+                .thenReturn(suggestedMapView());
+
+        mockMvc.perform(get("/api/mapas/salas/{salaId}/turmas/{turmaId}", salaId, turmaId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getView_shouldReturn403WhenUserHasNoAccessToClass() throws Exception {
+        UUID salaId = UUID.randomUUID();
+        UUID turmaId = UUID.randomUUID();
+
+        when(requestContextProvider.getRequestContext())
+                .thenReturn(new RequestContext(userId, TypeUser.STUDENT, List.of()));
+        doThrow(new AccessDeniedException("Acesso negado ao mapa solicitado"))
+                .when(getRoomMapViewUseCase).execute(salaId, turmaId);
+
+        mockMvc.perform(get("/api/mapas/salas/{salaId}/turmas/{turmaId}", salaId, turmaId))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getView_shouldReturn404WhenRoomOrClassNotFound() throws Exception {
+        UUID salaId = UUID.randomUUID();
+        UUID turmaId = UUID.randomUUID();
+
+        when(requestContextProvider.getRequestContext())
+                .thenReturn(new RequestContext(userId, TypeUser.SENAI, List.of()));
+        doThrow(new ResourceNotFoundException("Sala", salaId))
+                .when(getRoomMapViewUseCase).execute(salaId, turmaId);
+
+        mockMvc.perform(get("/api/mapas/salas/{salaId}/turmas/{turmaId}", salaId, turmaId))
+                .andExpect(status().isNotFound());
+    }
+
+    private RoomMapViewResponse savedMapView() {
+        RoomMapResponse map = new RoomMapResponse(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        RoomMapGridResponse grid = new RoomMapGridResponse(1, 1, 0, List.of());
+        return new RoomMapViewResponse(false, map, grid, List.of(), List.of());
+    }
+
+    private RoomMapViewResponse suggestedMapView() {
+        RoomMapGridResponse grid = new RoomMapGridResponse(1, 1, 0, List.of());
+        return new RoomMapViewResponse(true, null, grid, List.of(), List.of());
     }
 
     private Page<RoomMapSummaryResponse> emptyPage() {
