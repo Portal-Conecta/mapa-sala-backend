@@ -15,11 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapHistoryResponse;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 
@@ -39,6 +40,7 @@ public class RoomMapController {
     private final ListRoomMapHistoryUseCase listRoomMapHistoryUseCase;
     private final RequestContextProvider requestContextProvider;
     private final ArchiveRoomMapUseCase archiveRoomMapUseCase;
+    private final GetRoomMapViewUseCase getRoomMapViewUseCase;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
@@ -81,6 +83,22 @@ public class RoomMapController {
 
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(listRoomMapHistoryUseCase.execute(user.userId(), user.userType(), id, pageable));
+    }
+
+    @GetMapping("/salas/{salaId}/turmas/{turmaId}")
+    @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
+    @Operation(summary = "Visualizar mapa por sala e turma",
+            description = "Retorna o mapa salvo da turma na sala ou uma sugestão alfabética caso ainda não exista (RN-MS05).")
+    @ApiResponse(responseCode = "200", description = "Mapa salvo ou sugestão alfabética")
+    @ApiResponse(responseCode = "403", description = "Usuário sem acesso à turma")
+    @ApiResponse(responseCode = "404", description = "Sala ou turma não encontrada")
+    public ResponseEntity<RoomMapViewResponse> getView(
+            @Parameter(description = "Identificador da sala")
+            @PathVariable UUID salaId,
+            @Parameter(description = "Identificador da turma")
+            @PathVariable UUID turmaId
+    ) {
+        return ResponseEntity.ok(getRoomMapViewUseCase.execute(salaId, turmaId));
     }
 
     @PatchMapping("/{id}")
