@@ -3,6 +3,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -98,11 +99,10 @@ class CreateRoomMapUseCaseTest {
         lenient().when(roomMapRepository.findByClassIdAndRoomIdAndRemovedAtIsNull(classId, roomId))
                 .thenReturn(Optional.empty());
         lenient().when(roomMapRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        lenient().when(assembler.assembleFromSavedMap(any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(mock(RoomMapViewResponse.class));
+        lenient().when(assembler.assembleFromSavedMap(
+                any(), anyInt(), anyInt(), any(), any(), any(), any()
+        )).thenReturn(mock(RoomMapViewResponse.class));
 
-        // Contexto padrão: docente vinculado à turma. Sobrescrito nos
-        // testes que precisam de outro perfil/vínculo.
         givenRequestContext(TypeUser.TEACHER, classId);
     }
 

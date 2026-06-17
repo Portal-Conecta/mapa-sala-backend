@@ -36,16 +36,9 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.exception.GlobalHandlerException;
+import com.portal.conecta.mapa_de_sala.shared.security.exception.SecurityErrorResponseWriter;
+import com.portal.conecta.mapa_de_sala.shared.security.token.JwtExtractToken;
 
-/*
- * NOTA: assim como em RoomLayoutControllerTest, addFilters = false desliga
- * os filtros de segurança reais -- 401/403 aqui testam apenas a tradução de
- * exceções lançadas pelo use case (via GlobalHandlerException), não a
- * autenticação/autorização de fato. O 401 "sem autenticação" (critério de
- * aceite da issue #87) não é exercitável neste nível de teste; deve ser
- * coberto em teste de integração com filtros de segurança habilitados,
- * caso o projeto tenha essa camada.
- */
 @WebMvcTest(RoomMapController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import({
@@ -56,8 +49,7 @@ class RoomMapControllerCreateTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @MockitoBean
     private CreateRoomMapUseCase createRoomMapUseCase;
@@ -76,6 +68,12 @@ class RoomMapControllerCreateTest {
 
     @MockitoBean
     private RequestContextProvider requestContextProvider;
+
+    @MockitoBean
+    private JwtExtractToken jwtExtractToken;
+
+    @MockitoBean
+    private SecurityErrorResponseWriter securityErrorResponseWriter;
 
     private final UUID classId = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private final UUID roomId = UUID.fromString("22222222-2222-2222-2222-222222222222");

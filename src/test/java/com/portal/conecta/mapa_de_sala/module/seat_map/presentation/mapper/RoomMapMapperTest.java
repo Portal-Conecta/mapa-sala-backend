@@ -7,6 +7,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 
 import java.util.UUID;
 
@@ -19,8 +20,7 @@ class RoomMapMapperTest {
     @Test
     void toEntity_shouldMapFieldsAndIgnoreIdAndTemplate() {
         var classId = UUID.randomUUID();
-        var request = new CreateRoomMapRequest(classId, UUID.randomUUID(), UUID.randomUUID());
-
+        var request = new CreateRoomMapRequest(classId, UUID.randomUUID(), UUID.randomUUID(), List.of());
         RoomMap entity = mapper.toEntity(request);
 
         assertThat(entity.getId()).isNull();
