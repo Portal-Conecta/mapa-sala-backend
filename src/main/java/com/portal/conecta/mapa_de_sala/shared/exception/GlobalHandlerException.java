@@ -50,4 +50,20 @@ public class GlobalHandlerException {
     ) {
         return buildResponse(HttpStatus.NOT_FOUND, exception, request);
     }
+
+    @ExceptionHandler(com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException.class)
+    public ResponseEntity<ApiReponseException> handleBadRequest(
+            com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
+    }
+
+    @ExceptionHandler(com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException.class)
+    public ResponseEntity<ApiReponseException> handleConflict(
+            com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception, request);
+    }
 }
