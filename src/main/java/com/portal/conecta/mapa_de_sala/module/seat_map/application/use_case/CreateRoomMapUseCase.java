@@ -71,22 +71,31 @@ public class CreateRoomMapUseCase {
             throw new AccessDeniedException("Apenas docentes podem criar mapas.");
         }
 
-        boolean isLinkedToClass = context.classes().stream().anyMatch(c -> c.classId().equals(command.classId()));
-        if (!isLinkedToClass) {
-            throw new AccessDeniedException("Docente não vinculado à turma.");
+        if (!hubClassPort.existsById(command.classId())) {
+            throw new ResourceNotFoundException("Turma", command.classId());
         }
-
-        if (!hubClassPort.existsById(command.classId())) throw new ResourceNotFoundException("Turma", command.classId());
-        if (!hubRoomPort.existsById(command.roomId())) throw new ResourceNotFoundException("Sala", command.roomId());
+        if (!hubRoomPort.existsById(command.roomId())) {
+            throw new ResourceNotFoundException("Sala", command.roomId());
+        }
 
         LayoutTemplate template = templateRepository.findByIdAndActiveTrue(command.layoutTemplateId())
                 .orElseThrow(() -> new ResourceNotFoundException("Template", command.layoutTemplateId()));
 
-        if (roomMapRepository.findByClassIdAndRoomIdAndRemovedAtIsNull(command.classId(), command.roomId()).isPresent()) {
+        boolean isLinkedToClass = context.classes().stream()
+                .anyMatch(c -> c.classId().equals(command.classId()));
+        if (!isLinkedToClass) {
+            throw new AccessDeniedException("Docente não vinculado à turma.");
+        }
+
+        boolean activeMapExists = roomMapRepository
+                .findByClassIdAndRoomIdAndRemovedAtIsNull(command.classId(), command.roomId())
+                .isPresent();
+        if (activeMapExists) {
             throw new ConflictException("Já existe um mapa ativo para esta turma e sala.");
         }
 
-        List<LayoutPosition> templatePositions = positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(template.getId());
+        List<LayoutPosition> templatePositions =
+                positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(template.getId());
 
         SeatNumbering numbering = seatNumberCalculator.calculate(templatePositions);
 
@@ -95,13 +104,13 @@ public class CreateRoomMapUseCase {
         List<RoomMapLocation> locations = new ArrayList<>();
 
         if (command.locations() != null && !command.locations().isEmpty()) {
-            for (CreateRoomMapInitialAllocationCommand locCmd : command.locations()) {
-                UUID positionId = resolvePositionId(locCmd, templatePositions, numbering);
-                studentIds.add(locCmd.studentId());
+            for (CreateRoomMapInitialAllocationCommand locationCommand : command.locations()) {
+                UUID positionId = resolvePositionId(locationCommand, templatePositions, numbering);
+                studentIds.add(locationCommand.studentId());
                 positionIds.add(positionId);
 
                 RoomMapLocation location = new RoomMapLocation();
-                location.setStudentId(locCmd.studentId());
+                location.setStudentId(locationCommand.studentId());
                 location.setLayoutPositionId(positionId);
                 locations.add(location);
             }
@@ -114,9 +123,9 @@ public class CreateRoomMapUseCase {
         roomMap.setLayoutTemplateId(template.getId());
         roomMap.setLayoutTemplate(template);
 
-        for (RoomMapLocation loc : locations) {
-            loc.setRoomMap(roomMap);
-            roomMap.getLocations().add(loc);
+        for (RoomMapLocation location : locations) {
+            location.setRoomMap(roomMap);
+            roomMap.getLocations().add(location);
         }
 
         RoomMapHistory history = new RoomMapHistory();
@@ -141,13 +150,16 @@ public class CreateRoomMapUseCase {
         );
     }
 
-    private UUID resolvePositionId(CreateRoomMapInitialAllocationCommand cmd, List<LayoutPosition> positions, SeatNumbering numbering) {
-        if (cmd.layoutPositionId() != null) {
-            return cmd.layoutPositionId();
+    private UUID resolvePositionId(
+            CreateRoomMapInitialAllocationCommand command,
+            List<LayoutPosition> positions,
+            SeatNumbering numbering) {
+        if (command.layoutPositionId() != null) {
+            return command.layoutPositionId();
         }
-        if (cmd.seatNumber() != null) {
+        if (command.seatNumber() != null) {
             return positions.stream()
-                    .filter(p -> Integer.valueOf(cmd.seatNumber()).equals(numbering.seatNumberOf(p.getId())))
+                    .filter(position -> command.seatNumber().equals(numbering.seatNumberOf(position.getId())))
                     .map(LayoutPosition::getId)
                     .findFirst()
                     .orElseThrow(() -> new BadRequestException("seatNumber inválido ou não encontrado no template."));
