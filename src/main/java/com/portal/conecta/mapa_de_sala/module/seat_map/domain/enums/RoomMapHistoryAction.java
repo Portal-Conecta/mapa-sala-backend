@@ -5,6 +5,7 @@ public enum RoomMapHistoryAction {
     MAP_REPLICATED, // mapa foi replicado
     MAP_UPDATED, // mapa foi atualizado
     MAP_DELETED, // mapa foi deletado
+    MAP_ARCHIVED, // mapa foi arquivado (soft delete)
     STUDENT_ASSIGNED, // aprendiz foi alocado para um lugar
     STUDENT_MOVED,       // movimento simples ou parte de substituição
     STUDENT_UNASSIGNED,  // perdeu lugar (DISPLACE)

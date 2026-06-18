@@ -1,5 +1,6 @@
 package com.portal.conecta.mapa_de_sala.shared.exception;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.InvalidPaginationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,14 @@ public class GlobalHandlerException {
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.NOT_FOUND, exception, request);
+    }
+
+    @ExceptionHandler(RoomMapAlreadyArchivedException.class)
+    public ResponseEntity<ApiReponseException> handleAlreadyArchived(
+            RoomMapAlreadyArchivedException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
     }
 
     @ExceptionHandler(BadRequestException.class)
