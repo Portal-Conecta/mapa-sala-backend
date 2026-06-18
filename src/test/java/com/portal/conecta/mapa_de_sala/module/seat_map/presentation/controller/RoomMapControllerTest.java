@@ -6,6 +6,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetR
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapHistoryResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
@@ -85,23 +86,25 @@ class RoomMapControllerTest {
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private final UUID roomMapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
+    // --- archive ---
+
     @Test
     void archive_shouldReturn204WhenSuccessful() throws Exception {
         doNothing().when(archiveRoomMapUseCase).execute(mapId);
 
-        mockMvc.perform(patch("/api/mapas/{id}", mapId))
+        mockMvc.perform(patch("/api/mapas/{id}/arquivar", mapId))
                 .andExpect(status().isNoContent());
 
         verify(archiveRoomMapUseCase).execute(mapId);
     }
 
     @Test
-    void archive_shouldReturn404WhenMapNotFound() throws Exception {
-        doThrow(new ResourceNotFoundException("Mapa de sala", mapId))
+    void archive_shouldReturn400WhenMapIsAlreadyArchived() throws Exception {
+        doThrow(new RoomMapAlreadyArchivedException(mapId))
                 .when(archiveRoomMapUseCase).execute(mapId);
 
-        mockMvc.perform(patch("/api/mapas/{id}", mapId))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(patch("/api/mapas/{id}/arquivar", mapId))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -109,9 +112,29 @@ class RoomMapControllerTest {
         doThrow(new UnauthorizedUserException("Usuário não autorizado para arquivar mapa de sala"))
                 .when(archiveRoomMapUseCase).execute(mapId);
 
-        mockMvc.perform(patch("/api/mapas/{id}", mapId))
+        mockMvc.perform(patch("/api/mapas/{id}/arquivar", mapId))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void archive_shouldReturn403WhenUserHasNoPermission() throws Exception {
+        doThrow(new AccessDeniedException("Acesso negado"))
+                .when(archiveRoomMapUseCase).execute(mapId);
+
+        mockMvc.perform(patch("/api/mapas/{id}/arquivar", mapId))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void archive_shouldReturn404WhenMapNotFound() throws Exception {
+        doThrow(new ResourceNotFoundException("Mapa de sala", mapId))
+                .when(archiveRoomMapUseCase).execute(mapId);
+
+        mockMvc.perform(patch("/api/mapas/{id}/arquivar", mapId))
+                .andExpect(status().isNotFound());
+    }
+
+    // --- listHistory ---
 
     @Test
     void listHistory_shouldReturn200ForAprendiz() throws Exception {
@@ -170,6 +193,8 @@ class RoomMapControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // --- list ---
+
     @Test
     void list_shouldReturn200ForAprendiz() throws Exception {
         when(requestContextProvider.getRequestContext())
@@ -211,6 +236,8 @@ class RoomMapControllerTest {
         mockMvc.perform(get("/api/mapas"))
                 .andExpect(status().isUnauthorized());
     }
+
+    // --- getView ---
 
     @Test
     void getView_shouldReturn200WithSavedMapForAprendiz() throws Exception {
@@ -267,6 +294,8 @@ class RoomMapControllerTest {
         mockMvc.perform(get("/api/mapas/salas/{salaId}/turmas/{turmaId}", salaId, turmaId))
                 .andExpect(status().isNotFound());
     }
+
+    // --- helpers ---
 
     private RoomMapViewResponse savedMapView() {
         RoomMapResponse map = new RoomMapResponse(

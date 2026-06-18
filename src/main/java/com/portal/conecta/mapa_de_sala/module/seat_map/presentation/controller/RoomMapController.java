@@ -171,13 +171,17 @@ public class RoomMapController {
         return ResponseEntity.created(URI.create("/api/mapas/" + newMapId)).body(responseView);
     }
 
-    @PatchMapping("/{id}")
-    @Operation(summary = "Arquivar mapa de sala",
-            description = "Arquiva um mapa de sala existente.")
+    @PatchMapping("/{id}/arquivar")
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+    @Operation(summary = "Arquivar mapa de sala", 
+               description = "Arquiva um mapa de sala existente.")
     @ApiResponse(responseCode = "204", description = "Mapa de sala arquivado com sucesso")
+    @ApiResponse(responseCode = "400", description = "Mapa já está arquivado")
+    @ApiResponse(responseCode = "401", description = "Requisição sem autenticação")
+    @ApiResponse(responseCode = "403", description = "Perfil sem permissão para arquivar mapas")
     @ApiResponse(responseCode = "404", description = "Mapa de sala não encontrado")
     public ResponseEntity<Void> archive(
-            @PathVariable UUID id
+        @PathVariable UUID id
     ) {
         archiveRoomMapUseCase.execute(id);
         return ResponseEntity.noContent().build();

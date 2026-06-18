@@ -1,7 +1,11 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.RoomMapHistoryAction;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapHistory;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapHistoryRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
@@ -14,7 +18,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +41,9 @@ class ArchiveRoomMapUseCaseTest {
     @Mock
     private RequestContextProvider requestContextProvider;
 
+    @Mock
+    private RoomMapHistoryRepository roomMapHistoryRepository;
+
     private ArchiveRoomMapUseCase useCase;
 
     private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
@@ -43,7 +52,7 @@ class ArchiveRoomMapUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new ArchiveRoomMapUseCase(roomMapRepository, requestContextProvider);
+        useCase = new ArchiveRoomMapUseCase(roomMapRepository, roomMapHistoryRepository, requestContextProvider);
     }
 
     @Test
@@ -80,6 +89,34 @@ class ArchiveRoomMapUseCaseTest {
     }
 
     @Test
+    void execute_shouldSaveHistoryWithMapArchivedAction() {
+        var roomMap = activeRoomMap();
+        when(roomMapRepository.findById(mapId)).thenReturn(Optional.of(roomMap));
+        when(requestContextProvider.getRequestContext())
+                .thenReturn(new RequestContext(userId, TypeUser.ADMIN, List.of()));
+
+        useCase.execute(mapId);
+
+        var captor = ArgumentCaptor.forClass(RoomMapHistory.class);
+        verify(roomMapHistoryRepository).save(captor.capture());
+        assertThat(captor.getValue().getAction()).isEqualTo(RoomMapHistoryAction.MAP_ARCHIVED);
+        assertThat(captor.getValue().getUserId()).isEqualTo(userId);
+    }
+
+    @Test
+    void execute_shouldThrowWhenMapIsAlreadyArchived() {
+        var roomMap = archivedRoomMap();
+        when(roomMapRepository.findById(mapId)).thenReturn(Optional.of(roomMap));
+
+        assertThatThrownBy(() -> useCase.execute(mapId))
+                .isInstanceOf(RoomMapAlreadyArchivedException.class)
+                .hasMessageContaining(mapId.toString());
+
+        verify(roomMapRepository, never()).save(any());
+        verify(roomMapHistoryRepository, never()).save(any());
+    }
+
+    @Test
     void execute_shouldThrowWhenTeacherIsNotLinkedToClass() {
         var roomMap = activeRoomMap();
         var otherClassId = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
@@ -93,10 +130,11 @@ class ArchiveRoomMapUseCaseTest {
                 ));
 
         assertThatThrownBy(() -> useCase.execute(mapId))
-                .isInstanceOf(UnauthorizedUserException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("não autorizado");
 
         verify(roomMapRepository, never()).save(any());
+        verify(roomMapHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -111,9 +149,10 @@ class ArchiveRoomMapUseCaseTest {
                 ));
 
         assertThatThrownBy(() -> useCase.execute(mapId))
-                .isInstanceOf(UnauthorizedUserException.class);
+                .isInstanceOf(AccessDeniedException.class);
 
         verify(roomMapRepository, never()).save(any());
+        verify(roomMapHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -125,6 +164,7 @@ class ArchiveRoomMapUseCaseTest {
                 .hasMessageContaining("Mapa de sala");
 
         verify(roomMapRepository, never()).save(any());
+        verify(roomMapHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -164,6 +204,13 @@ class ArchiveRoomMapUseCaseTest {
         roomMap.setId(mapId);
         roomMap.setClassId(classId);
         roomMap.setRoomId(UUID.randomUUID());
+        return roomMap;
+    }
+
+    private RoomMap archivedRoomMap() {
+        var roomMap = activeRoomMap();
+        roomMap.setRemovedAt(Instant.now());
+        roomMap.setRemovedBy(userId);
         return roomMap;
     }
 
