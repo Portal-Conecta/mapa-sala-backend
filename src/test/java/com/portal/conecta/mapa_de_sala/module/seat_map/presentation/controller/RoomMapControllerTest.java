@@ -1,10 +1,17 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.controller;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomMapUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapHistoryResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
@@ -12,15 +19,7 @@ import com.portal.conecta.mapa_de_sala.shared.exception.GlobalHandlerException;
 import com.portal.conecta.mapa_de_sala.shared.exception.UnauthorizedUserException;
 import com.portal.conecta.mapa_de_sala.shared.security.exception.SecurityErrorResponseWriter;
 import com.portal.conecta.mapa_de_sala.shared.security.token.JwtExtractToken;
-import java.util.List;
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -37,27 +36,13 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
-import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
-import com.portal.conecta.mapa_de_sala.shared.exception.GlobalHandlerException;
-import com.portal.conecta.mapa_de_sala.shared.exception.UnauthorizedUserException;
-import com.portal.conecta.mapa_de_sala.shared.security.exception.SecurityErrorResponseWriter;
-import com.portal.conecta.mapa_de_sala.shared.security.token.JwtExtractToken;
 
 @WebMvcTest(RoomMapController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -71,7 +56,10 @@ class RoomMapControllerTest {
 
     @MockitoBean
     private ArchiveRoomMapUseCase archiveRoomMapUseCase;
-  
+
+    @MockitoBean
+    private CreateRoomMapUseCase createRoomMapUseCase;
+
     @MockitoBean
     private ListRoomMapsUseCase listRoomMapsUseCase;
 
@@ -90,7 +78,12 @@ class RoomMapControllerTest {
     @MockitoBean
     private SecurityErrorResponseWriter securityErrorResponseWriter;
 
+    @MockitoBean
+    private RoomMapMapper roomMapMapper;
+
     private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private final UUID roomMapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
     @Test
     void archive_shouldReturn204WhenSuccessful() throws Exception {
@@ -119,9 +112,6 @@ class RoomMapControllerTest {
         mockMvc.perform(patch("/api/mapas/{id}", mapId))
                 .andExpect(status().isUnauthorized());
     }
-  
-    private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private final UUID roomMapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
     @Test
     void listHistory_shouldReturn200ForAprendiz() throws Exception {
@@ -298,6 +288,3 @@ class RoomMapControllerTest {
         return new PageImpl<>(List.of());
     }
 }
-
-
-

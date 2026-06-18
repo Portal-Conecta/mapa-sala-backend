@@ -1,5 +1,6 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapRequest;
@@ -48,6 +49,10 @@ public interface RoomMapMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     void applyUpdate(UpdateRoomMapRequest request, @MappingTarget RoomMap entity);
+
+    default CreateRoomMapCommand toCommand(CreateRoomMapRequest request) {
+        return new CreateRoomMapCommand(request);
+    }
 
     default UpdateRoomMapCommand toCommand(UUID id, UpdateRoomMapRequest request) {
         return new UpdateRoomMapCommand(id, request);

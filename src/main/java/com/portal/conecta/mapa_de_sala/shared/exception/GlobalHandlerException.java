@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 
@@ -52,6 +54,22 @@ public class GlobalHandlerException {
         return buildResponse(HttpStatus.NOT_FOUND, exception, request);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiReponseException> handleBadRequest(
+            BadRequestException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiReponseException> handleConflict(
+            ConflictException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception, request);
+    }
+
     @ExceptionHandler(InvalidPaginationException.class)
     public ResponseEntity<ApiReponseException> handleInvalidPagination(
             InvalidPaginationException exception,
@@ -59,5 +77,4 @@ public class GlobalHandlerException {
     ){
         return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
     }
-
 }
