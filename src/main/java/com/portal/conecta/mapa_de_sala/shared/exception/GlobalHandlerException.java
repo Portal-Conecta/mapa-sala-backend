@@ -1,5 +1,6 @@
 package com.portal.conecta.mapa_de_sala.shared.exception;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.InvalidPaginationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -65,5 +66,13 @@ public class GlobalHandlerException {
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.CONFLICT, exception, request);
+    }
+
+    @ExceptionHandler(InvalidPaginationException.class)
+    public ResponseEntity<ApiReponseException> handleInvalidPagination(
+            InvalidPaginationException exception,
+            HttpServletRequest request
+    ){
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
     }
 }

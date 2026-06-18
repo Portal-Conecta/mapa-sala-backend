@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.PaginationPolicy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -73,6 +74,7 @@ public class RoomMapController {
             @Parameter(description = "Tamanho da página")
             @RequestParam(defaultValue = "20") int size
     ) {
+        PaginationPolicy.validate(page, size);
         RequestContext user = requestContextProvider.getRequestContext();
 
         Pageable pageable = PageRequest.of(page, size);
@@ -94,6 +96,7 @@ public class RoomMapController {
             @Parameter(description = "Tamanho da página")
             @RequestParam(defaultValue = "20") int size
     ) {
+        PaginationPolicy.validate(page, size);
         RequestContext user = requestContextProvider.getRequestContext();
 
         Pageable pageable = PageRequest.of(page, size);
