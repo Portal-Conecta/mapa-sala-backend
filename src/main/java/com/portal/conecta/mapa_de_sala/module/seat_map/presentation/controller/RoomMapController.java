@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.PaginationPolicy;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,13 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapInitialAllocationCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomMapUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapInitialAllocationRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapHistoryResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
@@ -57,6 +57,7 @@ public class RoomMapController {
     private final ArchiveRoomMapUseCase archiveRoomMapUseCase;
     private final GetRoomMapViewUseCase getRoomMapViewUseCase;
     private final CreateRoomMapUseCase createRoomMapUseCase;
+    private final RoomMapMapper roomMapMapper;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
@@ -120,12 +121,10 @@ public class RoomMapController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('TEACHER')")
     @Operation(
             summary = "Criar mapa de sala",
-            description = "Cria o vínculo entre turma e sala com snapshot do layout escolhido, "
-                    + "persistindo as alocações iniciais informadas. Aprendizes não alocados "
-                    + "retornam em unassignedStudents. Apenas o docente vinculado à turma pode "
-                    + "executar esta operação (verificado no use case, não via @PreAuthorize)."
+            description = "Cria o vínculo entre turma e sala com snapshot do layout escolhido."
     )
     @ApiResponses({
             @ApiResponse(
@@ -162,9 +161,14 @@ public class RoomMapController {
             )
     })
     public ResponseEntity<RoomMapViewResponse> create(@Valid @RequestBody CreateRoomMapRequest request) {
-        CreateRoomMapCommand command = toCommand(request);
-        RoomMapViewResponse response = createRoomMapUseCase.execute(command);
-        return ResponseEntity.created(URI.create("/api/mapas/" + response.map().id())).body(response);
+
+        CreateRoomMapCommand command = roomMapMapper.toCommand(request);
+
+        UUID newMapId = createRoomMapUseCase.execute(command);
+
+        RoomMapViewResponse responseView = getRoomMapViewUseCase.execute(request.roomId(), request.classId());
+
+        return ResponseEntity.created(URI.create("/api/mapas/" + newMapId)).body(responseView);
     }
 
     @PatchMapping("/{id}")
@@ -177,28 +181,5 @@ public class RoomMapController {
     ) {
         archiveRoomMapUseCase.execute(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private CreateRoomMapCommand toCommand(CreateRoomMapRequest request) {
-        List<CreateRoomMapInitialAllocationCommand> locationCommands = request.locations() == null
-                ? List.of()
-                : request.locations().stream()
-                .map(this::toLocationCommand)
-                .toList();
-
-        return new CreateRoomMapCommand(
-                request.classId(),
-                request.roomId(),
-                request.layoutTemplateId(),
-                locationCommands
-        );
-    }
-
-    private CreateRoomMapInitialAllocationCommand toLocationCommand(CreateRoomMapInitialAllocationRequest request) {
-        return new CreateRoomMapInitialAllocationCommand(
-                request.studentId(),
-                request.seatNumber(),
-                request.layoutPositionId()
-        );
     }
 }

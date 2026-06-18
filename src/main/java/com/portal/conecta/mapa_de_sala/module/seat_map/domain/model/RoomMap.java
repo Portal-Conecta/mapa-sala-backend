@@ -1,6 +1,7 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.domain.model;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.base.BaseAuditEntity;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.RoomMapHistoryAction;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,4 +47,29 @@ public class RoomMap extends BaseAuditEntity {
 
     @OneToMany(mappedBy = "roomMap", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomMapHistory> history = new ArrayList<>();
+
+    public static RoomMap create(UUID classId, UUID roomId, LayoutTemplate template, List<RoomMapLocation> locations, UUID createdByUserId) {
+        RoomMap roomMap = new RoomMap();
+        roomMap.setClassId(classId);
+        roomMap.setRoomId(roomId);
+        roomMap.setLayoutTemplateId(template.getId());
+        roomMap.setLayoutTemplate(template);
+
+        if (locations != null) {
+            locations.forEach(loc -> {
+                loc.setRoomMap(roomMap);
+                roomMap.getLocations().add(loc);
+            });
+        }
+
+        RoomMapHistory history = new RoomMapHistory();
+        history.setRoomMap(roomMap);
+        history.setUserId(createdByUserId);
+        history.setAction(RoomMapHistoryAction.MAP_CREATION);
+        history.setDetails("Criação inicial do mapa");
+
+        roomMap.getHistory().add(history);
+
+        return roomMap;
+    }
 }

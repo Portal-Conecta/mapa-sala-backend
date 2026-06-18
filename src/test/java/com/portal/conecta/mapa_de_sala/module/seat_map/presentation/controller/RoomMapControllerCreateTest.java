@@ -34,6 +34,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.exception.GlobalHandlerException;
 import com.portal.conecta.mapa_de_sala.shared.security.exception.SecurityErrorResponseWriter;
@@ -75,6 +76,9 @@ class RoomMapControllerCreateTest {
     @MockitoBean
     private SecurityErrorResponseWriter securityErrorResponseWriter;
 
+    @MockitoBean
+    private RoomMapMapper roomMapMapper;
+
     private final UUID classId = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private final UUID roomId = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private final UUID templateId = UUID.fromString("33333333-3333-3333-3333-333333333333");
@@ -92,7 +96,9 @@ class RoomMapControllerCreateTest {
     @Test
     void create_shouldReturn201WhenTeacherLinkedToClassCreatesMapWithoutAllocations() throws Exception {
         UUID mapId = UUID.randomUUID();
-        when(createRoomMapUseCase.execute(any())).thenReturn(savedMapResponse(mapId));
+
+        when(createRoomMapUseCase.execute(any())).thenReturn(mapId);
+        when(getRoomMapViewUseCase.execute(roomId, classId)).thenReturn(savedMapResponse(mapId));
 
         mockMvc.perform(post("/api/mapas")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -103,11 +109,14 @@ class RoomMapControllerCreateTest {
                 .andExpect(jsonPath("$.map.classId").value(classId.toString()));
 
         verify(createRoomMapUseCase).execute(any());
+        verify(getRoomMapViewUseCase).execute(roomId, classId);
     }
 
     @Test
     void create_shouldReturn201WhenAllocationIsProvidedViaSeatNumber() throws Exception {
-        when(createRoomMapUseCase.execute(any())).thenReturn(savedMapResponse(UUID.randomUUID()));
+        UUID mapId = UUID.randomUUID();
+        when(createRoomMapUseCase.execute(any())).thenReturn(mapId);
+        when(getRoomMapViewUseCase.execute(roomId, classId)).thenReturn(savedMapResponse(mapId));
 
         CreateRoomMapRequest request = new CreateRoomMapRequest(
                 classId, roomId, templateId,
@@ -122,7 +131,9 @@ class RoomMapControllerCreateTest {
 
     @Test
     void create_shouldReturn201WhenAllocationIsProvidedViaLayoutPositionId() throws Exception {
-        when(createRoomMapUseCase.execute(any())).thenReturn(savedMapResponse(UUID.randomUUID()));
+        UUID mapId = UUID.randomUUID();
+        when(createRoomMapUseCase.execute(any())).thenReturn(mapId);
+        when(getRoomMapViewUseCase.execute(roomId, classId)).thenReturn(savedMapResponse(mapId));
 
         CreateRoomMapRequest request = new CreateRoomMapRequest(
                 classId, roomId, templateId,

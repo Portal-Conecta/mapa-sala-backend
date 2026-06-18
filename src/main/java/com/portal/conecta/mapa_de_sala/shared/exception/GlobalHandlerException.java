@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 
@@ -52,17 +54,17 @@ public class GlobalHandlerException {
         return buildResponse(HttpStatus.NOT_FOUND, exception, request);
     }
 
-    @ExceptionHandler(com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException.class)
+    @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiReponseException> handleBadRequest(
-            com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException exception,
+            BadRequestException exception,
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
     }
 
-    @ExceptionHandler(com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException.class)
+    @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiReponseException> handleConflict(
-            com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException exception,
+            ConflictException exception,
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.CONFLICT, exception, request);

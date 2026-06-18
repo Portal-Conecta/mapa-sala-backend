@@ -11,6 +11,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
@@ -76,6 +77,9 @@ class RoomMapControllerTest {
 
     @MockitoBean
     private SecurityErrorResponseWriter securityErrorResponseWriter;
+
+    @MockitoBean
+    private RoomMapMapper roomMapMapper;
 
     private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");

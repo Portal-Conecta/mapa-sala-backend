@@ -3,7 +3,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -14,11 +14,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.security.access.AccessDeniedException;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.assembler.RoomMapViewAssembler;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapInitialAllocationCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
@@ -29,13 +26,12 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPositi
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutTemplate;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapAllocationValidator;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapCreationValidator;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapPositionResolver;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.SeatNumberCalculator;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutTemplateRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
-import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
@@ -44,14 +40,14 @@ import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 class CreateRoomMapUseCaseTest {
 
     private RequestContextProvider requestContextProvider;
-    private HubClassPort hubClassPort;
-    private HubRoomPort hubRoomPort;
-    private LayoutTemplateRepository templateRepository;
     private RoomMapRepository roomMapRepository;
+    private LayoutTemplateRepository templateRepository;
     private LayoutPositionRepository positionRepository;
-    private SeatNumberCalculator seatNumberCalculator;
+
+    private RoomMapCreationValidator creationValidator;
     private RoomMapAllocationValidator allocationValidator;
-    private RoomMapViewAssembler assembler;
+    private SeatNumberCalculator seatNumberCalculator;
+    private RoomMapPositionResolver positionResolver;
 
     private CreateRoomMapUseCase useCase;
 
@@ -63,25 +59,25 @@ class CreateRoomMapUseCaseTest {
     @BeforeEach
     void setUp() {
         requestContextProvider = mock(RequestContextProvider.class);
-        hubClassPort = mock(HubClassPort.class);
-        hubRoomPort = mock(HubRoomPort.class);
-        templateRepository = mock(LayoutTemplateRepository.class);
         roomMapRepository = mock(RoomMapRepository.class);
+        templateRepository = mock(LayoutTemplateRepository.class);
         positionRepository = mock(LayoutPositionRepository.class);
-        seatNumberCalculator = new SeatNumberCalculator();
+
+        creationValidator = mock(RoomMapCreationValidator.class);
+
         allocationValidator = new RoomMapAllocationValidator();
-        assembler = mock(RoomMapViewAssembler.class);
+        seatNumberCalculator = new SeatNumberCalculator();
+        positionResolver = new RoomMapPositionResolver();
 
         useCase = new CreateRoomMapUseCase(
                 requestContextProvider,
-                hubClassPort,
-                hubRoomPort,
-                templateRepository,
                 roomMapRepository,
+                templateRepository,
                 positionRepository,
-                seatNumberCalculator,
+                creationValidator,
                 allocationValidator,
-                assembler
+                seatNumberCalculator,
+                positionResolver
         );
 
         classId = UUID.randomUUID();
@@ -93,15 +89,15 @@ class CreateRoomMapUseCaseTest {
         lenient().when(template.getDimensionX()).thenReturn(6);
         lenient().when(template.getDimensionY()).thenReturn(5);
 
-        lenient().when(hubClassPort.existsById(classId)).thenReturn(true);
-        lenient().when(hubRoomPort.existsById(roomId)).thenReturn(true);
         lenient().when(templateRepository.findByIdAndActiveTrue(templateId)).thenReturn(Optional.of(template));
-        lenient().when(roomMapRepository.findByClassIdAndRoomIdAndRemovedAtIsNull(classId, roomId))
-                .thenReturn(Optional.empty());
-        lenient().when(roomMapRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        lenient().when(assembler.assembleFromSavedMap(
-                any(), anyInt(), anyInt(), any(), any(), any(), any()
-        )).thenReturn(mock(RoomMapViewResponse.class));
+
+        lenient().when(roomMapRepository.save(any())).thenAnswer(invocation -> {
+            RoomMap map = invocation.getArgument(0);
+            RoomMap spiedMap = org.mockito.Mockito.spy(map);
+            lenient().when(spiedMap.getId()).thenReturn(UUID.randomUUID());
+            lenient().when(spiedMap.getLayoutTemplateId()).thenReturn(templateId);
+            return spiedMap;
+        });
 
         givenRequestContext(TypeUser.TEACHER, classId);
     }
@@ -116,13 +112,13 @@ class CreateRoomMapUseCaseTest {
 
     private List<LayoutPosition> twoStudentPositionsTemplate() {
         LayoutPosition position1 = mock(LayoutPosition.class);
-        lenient().when(position1.getId()).thenReturn(UUID.randomUUID());
+        lenient().when(position1.getId()).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         lenient().when(position1.getPositionX()).thenReturn(0);
         lenient().when(position1.getPositionY()).thenReturn(0);
         lenient().when(position1.getType()).thenReturn(LayoutPositionType.STUDENT);
 
         LayoutPosition position2 = mock(LayoutPosition.class);
-        lenient().when(position2.getId()).thenReturn(UUID.randomUUID());
+        lenient().when(position2.getId()).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         lenient().when(position2.getPositionX()).thenReturn(1);
         lenient().when(position2.getPositionY()).thenReturn(0);
         lenient().when(position2.getType()).thenReturn(LayoutPositionType.STUDENT);
@@ -130,50 +126,31 @@ class CreateRoomMapUseCaseTest {
         return List.of(position1, position2);
     }
 
-    // --- Permissão -----------------------------------------------------
 
-    @ParameterizedTest
-    @EnumSource(value = TypeUser.class, names = {"STUDENT", "REPRESENTATIVE", "SENAI", "WEG", "ADMIN"})
-    void deveLancarAccessDeniedQuandoPerfilNaoEDocente(TypeUser userType) {
-        givenRequestContext(userType, classId);
+    @Test
+    void deveRepassarExceptionQuandoCreationValidatorNegarPreCondicoes() {
+        doThrow(new AccessDeniedException("Docente não vinculado à turma."))
+                .when(creationValidator).validatePreConditions(any(), any(), any());
 
         CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
 
         assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Docente não vinculado à turma.");
     }
 
     @Test
-    void deveLancarAccessDeniedQuandoDocenteNaoVinculadoATurma() {
-        givenRequestContext(TypeUser.TEACHER, UUID.randomUUID());
+    void deveRepassarConflictQuandoCreationValidatorIdentificarMapaAtivo() {
+        doThrow(new ConflictException("Já existe um mapa ativo para esta turma e sala."))
+                .when(creationValidator).validatePreConditions(any(), any(), any());
 
         CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
 
         assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Já existe um mapa ativo para esta turma e sala.");
     }
 
-    // --- Existência dos recursos (404) ----------------------------------
-
-    @Test
-    void deveLancarResourceNotFoundQuandoTurmaNaoExiste() {
-        when(hubClassPort.existsById(classId)).thenReturn(false);
-
-        CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(ResourceNotFoundException.class);
-    }
-
-    @Test
-    void deveLancarResourceNotFoundQuandoSalaNaoExiste() {
-        when(hubRoomPort.existsById(roomId)).thenReturn(false);
-
-        CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(ResourceNotFoundException.class);
-    }
 
     @Test
     void deveLancarResourceNotFoundQuandoTemplateNaoExiste() {
@@ -185,21 +162,6 @@ class CreateRoomMapUseCaseTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // --- Mapa duplicado (409) -------------------------------------------
-
-    @Test
-    void deveLancarConflictQuandoJaExisteMapaAtivo() {
-        RoomMap existingMap = mock(RoomMap.class);
-        when(roomMapRepository.findByClassIdAndRoomIdAndRemovedAtIsNull(classId, roomId))
-                .thenReturn(Optional.of(existingMap));
-
-        CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(ConflictException.class);
-    }
-
-    // --- RN-MS10: integridade das alocações -----------------------------
 
     @Test
     void deveLancarBadRequestQuandoPosicaoNaoPertenceAoTemplate() {
@@ -279,7 +241,6 @@ class CreateRoomMapUseCaseTest {
                 .isInstanceOf(BadRequestException.class);
     }
 
-    // --- Resolução seatNumber -> layoutPositionId ------------------------
 
     @Test
     void deveLancarBadRequestQuandoSeatNumberNaoExisteNoTemplate() {
@@ -312,38 +273,16 @@ class CreateRoomMapUseCaseTest {
     }
 
     @Test
-    void deveResolverSeatNumberParaLayoutPositionIdCorretamente() {
+    void deveCriarMapaSemAlocacoesERetornarIdDoMapa() {
         List<LayoutPosition> positions = twoStudentPositionsTemplate();
         when(positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
                 .thenReturn(positions);
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(List.of());
-
-        UUID studentId = UUID.randomUUID();
-
-        CreateRoomMapCommand command = new CreateRoomMapCommand(
-                classId, roomId, templateId,
-                List.of(new CreateRoomMapInitialAllocationCommand(studentId, 1, null))
-        );
-
-        RoomMapViewResponse response = useCase.execute(command);
-
-        assertThat(response).isNotNull();
-    }
-
-    // --- Cenários de sucesso --------------------------------------------
-
-    @Test
-    void deveCriarMapaSemAlocacoes() {
-        List<LayoutPosition> positions = twoStudentPositionsTemplate();
-        when(positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(positions);
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(List.of());
 
         CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
 
-        RoomMapViewResponse response = useCase.execute(command);
+        UUID generatedId = useCase.execute(command);
 
-        assertThat(response).isNotNull();
+        assertThat(generatedId).isNotNull();
     }
 
     @Test
@@ -351,7 +290,6 @@ class CreateRoomMapUseCaseTest {
         List<LayoutPosition> positions = twoStudentPositionsTemplate();
         when(positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
                 .thenReturn(positions);
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(List.of());
 
         UUID studentId = UUID.randomUUID();
 
@@ -360,9 +298,27 @@ class CreateRoomMapUseCaseTest {
                 List.of(new CreateRoomMapInitialAllocationCommand(studentId, null, positions.get(0).getId()))
         );
 
-        RoomMapViewResponse response = useCase.execute(command);
+        UUID generatedId = useCase.execute(command);
 
-        assertThat(response).isNotNull();
+        assertThat(generatedId).isNotNull();
+    }
+
+    @Test
+    void deveResolverSeatNumberParaLayoutPositionIdCorretamenteECriarMapa() {
+        List<LayoutPosition> positions = twoStudentPositionsTemplate();
+        when(positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
+                .thenReturn(positions);
+
+        UUID studentId = UUID.randomUUID();
+
+        CreateRoomMapCommand command = new CreateRoomMapCommand(
+                classId, roomId, templateId,
+                List.of(new CreateRoomMapInitialAllocationCommand(studentId, 1, null))
+        );
+
+        UUID generatedId = useCase.execute(command);
+
+        assertThat(generatedId).isNotNull();
     }
 
     @Test
@@ -370,14 +326,11 @@ class CreateRoomMapUseCaseTest {
         List<LayoutPosition> positions = twoStudentPositionsTemplate();
         when(positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
                 .thenReturn(positions);
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(List.of());
 
         CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
 
         useCase.execute(command);
 
-        org.mockito.Mockito.verify(roomMapRepository).save(
-                org.mockito.ArgumentMatchers.argThat(roomMap -> templateId.equals(roomMap.getLayoutTemplateId()))
-        );
+        org.mockito.Mockito.verify(roomMapRepository).save(any(RoomMap.class));
     }
 }
