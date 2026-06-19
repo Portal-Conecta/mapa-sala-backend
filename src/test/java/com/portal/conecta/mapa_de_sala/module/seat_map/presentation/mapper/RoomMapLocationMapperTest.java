@@ -54,7 +54,7 @@ class RoomMapLocationMapperTest {
     @Test
     void toMoveCommand_shouldCombineRoomMapIdAndRequest() {
         var roomMapId = UUID.randomUUID();
-        var request = new MoveStudentRequest(UUID.randomUUID(), UUID.randomUUID());
+        var request = new MoveStudentRequest(UUID.randomUUID(), UUID.randomUUID(), null);
 
         MoveStudentCommand command = mapper.toMoveCommand(roomMapId, request);
 

@@ -4,7 +4,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.PaginationPolicy;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapLocationMapper;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
 
 import org.springframework.data.domain.Page;
@@ -22,11 +25,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapHistoryResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
@@ -58,6 +56,8 @@ public class RoomMapController {
     private final GetRoomMapViewUseCase getRoomMapViewUseCase;
     private final CreateRoomMapUseCase createRoomMapUseCase;
     private final RoomMapMapper roomMapMapper;
+    private final RoomMapLocationMapper roomMapLocationMapper;
+    private final MoveStudentUseCase moveStudentUseCase;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
@@ -184,6 +184,23 @@ public class RoomMapController {
         @PathVariable UUID id
     ) {
         archiveRoomMapUseCase.execute(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/locations/move")
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Mover aprendiz no mapa",
+            description = "Move um aprendiz para outra posição no mapa. Em caso de conflito, aplica DISPLACE (padrão) ou SWAP.")
+    @ApiResponse(responseCode = "204", description = "Aprendiz movido com sucesso")
+    @ApiResponse(responseCode = "400", description = "Posição alvo inválida ou mapa arquivado")
+    @ApiResponse(responseCode = "401", description = "Requisição sem autenticação")
+    @ApiResponse(responseCode = "403", description = "Perfil sem permissão ou docente sem vínculo com a turma")
+    @ApiResponse(responseCode = "404", description = "Mapa, posição ou alocação não encontrados")
+    public ResponseEntity<Void> moveStudent(
+            @PathVariable UUID id,
+            @Valid @RequestBody MoveStudentRequest request
+    ) {
+        moveStudentUseCase.execute(roomMapLocationMapper.toMoveCommand(id, request));
         return ResponseEntity.noContent().build();
     }
 }
