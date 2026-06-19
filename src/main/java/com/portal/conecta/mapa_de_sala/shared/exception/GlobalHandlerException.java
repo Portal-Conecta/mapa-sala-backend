@@ -1,16 +1,11 @@
 package com.portal.conecta.mapa_de_sala.shared.exception;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.InvalidPaginationException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
-
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -84,6 +79,14 @@ public class GlobalHandlerException {
             InvalidPaginationException exception,
             HttpServletRequest request
     ){
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
+    }
+
+    @ExceptionHandler(InvalidLayoutPositionTypeException.class)
+    public ResponseEntity<ApiReponseException> handleInvalidLayoutPositionType(
+            InvalidLayoutPositionTypeException exception,
+            HttpServletRequest request
+    ) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
     }
 }
