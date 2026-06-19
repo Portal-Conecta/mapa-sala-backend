@@ -1,10 +1,12 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.controller;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.MoveStudentUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomMapUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.InvalidLayoutPositionTypeException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
@@ -13,6 +15,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapSummaryResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapLocationMapper;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
@@ -81,6 +84,12 @@ class RoomMapControllerTest {
 
     @MockitoBean
     private RoomMapMapper roomMapMapper;
+
+    @MockitoBean
+    private MoveStudentUseCase moveStudentUseCase;
+
+    @MockitoBean
+    private RoomMapLocationMapper roomMapLocationMapper;
 
     private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -295,6 +304,112 @@ class RoomMapControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+
+    // --- moveStudent ---
+
+    @Test
+    void moveStudent_shouldReturn204WhenSuccessful() throws Exception {
+        doNothing().when(moveStudentUseCase).execute(any());
+
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "studentId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                                  "targetLayoutPositionId": "11111111-1111-1111-1111-111111111111"
+                                }
+                                """))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void moveStudent_shouldReturn400WhenMapIsArchived() throws Exception {
+        doThrow(new RoomMapAlreadyArchivedException(mapId))
+                .when(moveStudentUseCase).execute(any());
+
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "studentId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                                  "targetLayoutPositionId": "11111111-1111-1111-1111-111111111111"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void moveStudent_shouldReturn400WhenPositionTypeIsInvalid() throws Exception {
+        doThrow(new InvalidLayoutPositionTypeException("Posição inválida"))
+                .when(moveStudentUseCase).execute(any());
+
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "studentId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                                  "targetLayoutPositionId": "11111111-1111-1111-1111-111111111111"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void moveStudent_shouldReturn401WhenNotAuthenticated() throws Exception {
+        doThrow(new UnauthorizedUserException("Authentication is required."))
+                .when(moveStudentUseCase).execute(any());
+
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "studentId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                                  "targetLayoutPositionId": "11111111-1111-1111-1111-111111111111"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void moveStudent_shouldReturn403WhenUserHasNoPermission() throws Exception {
+        doThrow(new AccessDeniedException("Acesso negado"))
+                .when(moveStudentUseCase).execute(any());
+
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "studentId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                                  "targetLayoutPositionId": "11111111-1111-1111-1111-111111111111"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void moveStudent_shouldReturn404WhenMapNotFound() throws Exception {
+        doThrow(new ResourceNotFoundException("Mapa de sala", mapId))
+                .when(moveStudentUseCase).execute(any());
+
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "studentId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                                  "targetLayoutPositionId": "11111111-1111-1111-1111-111111111111"
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void moveStudent_shouldReturn400WhenBodyIsMissingRequiredFields() throws Exception {
+        mockMvc.perform(patch("/api/mapas/{id}/locations/move", mapId)
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
     // --- helpers ---
 
     private RoomMapViewResponse savedMapView() {
@@ -316,4 +431,4 @@ class RoomMapControllerTest {
     private Page<RoomMapHistoryResponse> emptyHistoryPage() {
         return new PageImpl<>(List.of());
     }
-}
+}// NOTE: will be injected via sed below
