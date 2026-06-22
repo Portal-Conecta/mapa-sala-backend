@@ -4,6 +4,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.InvalidLayoutPositionTypeException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapAllocationsUpdateValidator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapGridResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapHistoryResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapResponse;
@@ -88,6 +89,9 @@ class RoomMapControllerTest {
 
     @MockitoBean
     private UpdateRoomMapAllocationsUseCase updateRoomMapAllocationsUseCase;
+
+    @MockitoBean
+    private RoomMapAllocationsUpdateValidator roomMapAllocationsUpdateValidator;
 
     private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");

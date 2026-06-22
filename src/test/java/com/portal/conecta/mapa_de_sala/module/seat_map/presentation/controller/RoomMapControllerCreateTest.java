@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.*;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapAllocationsUpdateValidator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapLocationMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +85,9 @@ class RoomMapControllerCreateTest {
 
     @MockitoBean
     private UpdateRoomMapAllocationsUseCase updateRoomMapAllocationsUseCase;
+
+    @MockitoBean
+    private RoomMapAllocationsUpdateValidator roomMapAllocationsUpdateValidator;
 
     private final UUID classId = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private final UUID roomId = UUID.fromString("22222222-2222-2222-2222-222222222222");

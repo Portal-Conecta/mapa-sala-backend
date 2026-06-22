@@ -2,15 +2,14 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.assembler.RoomMapViewAssembler;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapAllocationsCommand;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.RoomMapHistoryAction;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutPosition;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapHistory;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.hub.HubStudent;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapAllocationsUpdateValidator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.SeatNumberCalculator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.SeatNumbering;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.*;
@@ -37,6 +36,7 @@ public class UpdateRoomMapAllocationsUseCase {
     private final LayoutPositionRepository layoutPositionRepository;
     private final RoomMapHistoryRepository roomMapHistoryRepository;
     private final HubClassPort hubClassPort;
+    private final RoomMapAllocationsUpdateValidator allocationsUpdateValidator;
     private final SeatNumberCalculator seatNumberCalculator;
     private final RoomMapViewAssembler assembler;
     private final RequestContextProvider requestContextProvider;
@@ -66,7 +66,7 @@ public class UpdateRoomMapAllocationsUseCase {
                 .map(HubStudent::id)
                 .collect(Collectors.toSet());
 
-        validateAllocations(entries, positionById, classStudentIds);
+        allocationsUpdateValidator.validate(entries, positionById, classStudentIds);
 
         roomMapLocationRepository.deleteByRoomMapId(roomMapId);
         roomMapLocationRepository.flush();
@@ -118,45 +118,4 @@ public class UpdateRoomMapAllocationsUseCase {
         throw new AccessDeniedException("Usuário não autorizado para editar as alocações deste mapa de sala");
     }
 
-    private void validateAllocations(
-            List<AllocationEntryRequest> entries,
-            Map<UUID, LayoutPosition> positionById,
-            Set<UUID> classStudentIds
-    ) {
-        Set<UUID> seenStudents = new HashSet<>();
-        Set<UUID> seenPositions = new HashSet<>();
-
-        for (AllocationEntryRequest entry : entries) {
-            if (!seenStudents.add(entry.studentId())) {
-                throw new BadRequestException("studentId duplicado na lista: " + entry.studentId());
-            }
-
-            if (!seenPositions.add(entry.layoutPositionId())) {
-                throw new BadRequestException("layoutPositionId duplicado na lista: " + entry.layoutPositionId());
-            }
-
-            LayoutPosition position = positionById.get(entry.layoutPositionId());
-            if (position == null) {
-                throw new BadRequestException(
-                        "layoutPositionId não pertence ao template do mapa: " + entry.layoutPositionId());
-            }
-
-            if (position.getType() != LayoutPositionType.STUDENT) {
-                throw new BadRequestException(
-                        "layoutPositionId não é do tipo STUDENT: " + entry.layoutPositionId()
-                                + " (tipo atual: " + position.getType() + ")");
-            }
-
-            if (!classStudentIds.contains(entry.studentId())) {
-                throw new BadRequestException("studentId não pertence à turma do mapa: " + entry.studentId());
-            }
-        }
-
-        if (!seenStudents.equals(classStudentIds)) {
-            Set<UUID> missing = new HashSet<>(classStudentIds);
-            missing.removeAll(seenStudents);
-            throw new BadRequestException(
-                    "Todos os alunos da turma devem estar alocados. Alunos ausentes: " + missing);
-        }
-    }
 }

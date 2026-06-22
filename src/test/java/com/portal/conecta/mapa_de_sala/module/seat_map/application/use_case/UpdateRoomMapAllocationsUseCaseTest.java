@@ -12,6 +12,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapHistory;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.hub.HubStudent;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapAllocationsUpdateValidator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.SeatNumberCalculator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
@@ -58,23 +59,21 @@ class UpdateRoomMapAllocationsUseCaseTest {
     @Mock private HubClassPort hubClassPort;
     @Mock private RoomMapViewAssembler assembler;
     @Mock private RequestContextProvider requestContextProvider;
+    @Mock private RoomMapAllocationsUpdateValidator allocationsUpdateValidator;
 
     private final SeatNumberCalculator seatNumberCalculator = new SeatNumberCalculator();
 
     private UpdateRoomMapAllocationsUseCase useCase;
 
     private final UUID roomMapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-    private final UUID classId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-    private final UUID userId = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+    private final UUID classId   = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    private final UUID userId    = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
     private final UUID templateId = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
-    private final UUID seat1 = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private final UUID seat2 = UUID.fromString("33333333-3333-3333-3333-333333333333");
-    private final UUID teacherPos = UUID.fromString("44444444-4444-4444-4444-444444444444");
-
-    private final UUID student1 = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
-    private final UUID student2 = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
-    private final UUID outsideStudent = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
+    private final UUID seat1      = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private final UUID seat2      = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private final UUID student1   = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
+    private final UUID student2   = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
 
     @BeforeEach
     void setUp() {
@@ -84,6 +83,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
                 layoutPositionRepository,
                 roomMapHistoryRepository,
                 hubClassPort,
+                allocationsUpdateValidator,
                 seatNumberCalculator,
                 assembler,
                 requestContextProvider
@@ -92,18 +92,9 @@ class UpdateRoomMapAllocationsUseCaseTest {
 
     @Test
     void execute_shouldUpdateAllocationsSuccessfullyForTeacher() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-        when(assembler.assembleFromSavedMap(any(), anyInt(), anyInt(), anyList(), any(), anyList(), anyList()))
-                .thenReturn(mock(RoomMapViewResponse.class));
+        setupHappyPath();
 
-        var command = command(entry(student1, seat1), entry(student2, seat2));
-
-        useCase.execute(command);
+        useCase.execute(command(entry(student1, seat1), entry(student2, seat2)));
 
         verify(roomMapLocationRepository).deleteByRoomMapId(roomMapId);
         verify(roomMapLocationRepository, times(2)).flush();
@@ -112,13 +103,13 @@ class UpdateRoomMapAllocationsUseCaseTest {
         verify(roomMapLocationRepository).saveAll(captor.capture());
         List<RoomMapLocation> saved = captor.getValue();
         assertThat(saved).hasSize(2);
-        assertThat(saved).extracting(RoomMapLocation::getStudentId).containsExactlyInAnyOrder(student1, student2);
+        assertThat(saved).extracting(RoomMapLocation::getStudentId)
+                .containsExactlyInAnyOrder(student1, student2);
     }
 
     @Test
     void execute_shouldUpdateAllocationsSuccessfullyForAdmin() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
+        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext())
                 .thenReturn(new RequestContext(userId, TypeUser.ADMIN, List.of()));
         when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
@@ -127,23 +118,14 @@ class UpdateRoomMapAllocationsUseCaseTest {
         when(assembler.assembleFromSavedMap(any(), anyInt(), anyInt(), anyList(), any(), anyList(), anyList()))
                 .thenReturn(mock(RoomMapViewResponse.class));
 
-        var command = command(entry(student1, seat1), entry(student2, seat2));
-
-        useCase.execute(command);
+        useCase.execute(command(entry(student1, seat1), entry(student2, seat2)));
 
         verify(roomMapLocationRepository).saveAll(anyList());
     }
 
     @Test
     void execute_shouldSaveHistoryWithMapUpdatedAction() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-        when(assembler.assembleFromSavedMap(any(), anyInt(), anyInt(), anyList(), any(), anyList(), anyList()))
-                .thenReturn(mock(RoomMapViewResponse.class));
+        setupHappyPath();
 
         useCase.execute(command(entry(student1, seat1), entry(student2, seat2)));
 
@@ -152,6 +134,15 @@ class UpdateRoomMapAllocationsUseCaseTest {
         assertThat(captor.getValue().getAction()).isEqualTo(RoomMapHistoryAction.MAP_UPDATED);
         assertThat(captor.getValue().getUserId()).isEqualTo(userId);
         assertThat(captor.getValue().getDetails()).contains("2 alunos alocados");
+    }
+
+    @Test
+    void execute_shouldDelegateValidationToValidator() {
+        setupHappyPath();
+
+        useCase.execute(command(entry(student1, seat1), entry(student2, seat2)));
+
+        verify(allocationsUpdateValidator).validate(anyList(), any(), any());
     }
 
     @Test
@@ -180,8 +171,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
 
     @Test
     void execute_shouldThrowWhenTeacherIsNotLinkedToClass() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
+        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext()).thenReturn(
                 new RequestContext(userId, TypeUser.TEACHER,
                         List.of(new ContextClass(UUID.randomUUID(), "TEACHER")))
@@ -195,8 +185,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
 
     @Test
     void execute_shouldThrowWhenStudentTries() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
+        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext()).thenReturn(
                 new RequestContext(userId, TypeUser.STUDENT, List.of(new ContextClass(classId, "STUDENT")))
         );
@@ -206,116 +195,32 @@ class UpdateRoomMapAllocationsUseCaseTest {
     }
 
     @Test
-    void execute_shouldThrowWhenStudentIdIsDuplicated() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
+    void execute_shouldNotPersistWhenValidationFails() {
+        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
         when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
                 .thenReturn(templatePositions());
         when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
+        doThrow(new BadRequestException("validação falhou"))
+                .when(allocationsUpdateValidator).validate(any(), any(), any());
 
-        var command = command(entry(student1, seat1), entry(student1, seat2));
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("duplicado");
-
-        verify(roomMapLocationRepository, never()).deleteByRoomMapId(any());
-    }
-
-    @Test
-    void execute_shouldThrowWhenLayoutPositionIdIsDuplicated() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-
-        var command = command(entry(student1, seat1), entry(student2, seat1));
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("duplicado");
-
-        verify(roomMapLocationRepository, never()).deleteByRoomMapId(any());
-    }
-
-    @Test
-    void execute_shouldThrowWhenPositionDoesNotBelongToTemplate() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-
-        var unknownPosition = UUID.randomUUID();
-        var command = command(entry(student1, unknownPosition), entry(student2, seat2));
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("não pertence ao template");
-
-        verify(roomMapLocationRepository, never()).deleteByRoomMapId(any());
-    }
-
-    @Test
-    void execute_shouldThrowWhenPositionIsNotStudentType() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-
-        var command = command(entry(student1, teacherPos), entry(student2, seat2));
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("não é do tipo STUDENT");
-
-        verify(roomMapLocationRepository, never()).deleteByRoomMapId(any());
-    }
-
-    @Test
-    void execute_shouldThrowWhenStudentDoesNotBelongToClass() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-
-        var command = command(entry(outsideStudent, seat1), entry(student2, seat2));
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("não pertence à turma");
-
-        verify(roomMapLocationRepository, never()).deleteByRoomMapId(any());
-    }
-
-    @Test
-    void execute_shouldThrowWhenClassStudentIsMissingFromList() {
-        var roomMap = activeRoomMap();
-        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
-        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
-                .thenReturn(templatePositions());
-        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
-
-        // só envia student1, falta student2
-        var command = command(entry(student1, seat1));
-
-        assertThatThrownBy(() -> useCase.execute(command))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("ausentes");
+        assertThatThrownBy(() -> useCase.execute(command(entry(student1, seat1))))
+                .isInstanceOf(BadRequestException.class);
 
         verify(roomMapLocationRepository, never()).deleteByRoomMapId(any());
     }
 
     // --- helpers ---
+
+    private void setupHappyPath() {
+        when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
+        when(requestContextProvider.getRequestContext()).thenReturn(teacherContext());
+        when(layoutPositionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
+                .thenReturn(templatePositions());
+        when(hubClassPort.findStudentsByClassId(classId)).thenReturn(classStudents());
+        when(assembler.assembleFromSavedMap(any(), anyInt(), anyInt(), anyList(), any(), anyList(), anyList()))
+                .thenReturn(mock(RoomMapViewResponse.class));
+    }
 
     private UpdateRoomMapAllocationsCommand command(AllocationEntryRequest... entries) {
         return new UpdateRoomMapAllocationsCommand(roomMapId, new UpdateRoomMapAllocationsRequest(List.of(entries)));
@@ -349,7 +254,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
         return List.of(
                 position(seat1, 0, 0, LayoutPositionType.STUDENT),
                 position(seat2, 1, 0, LayoutPositionType.STUDENT),
-                position(teacherPos, 2, 0, LayoutPositionType.TEACHER)
+                position(UUID.fromString("44444444-4444-4444-4444-444444444444"), 2, 0, LayoutPositionType.TEACHER)
         );
     }
 
