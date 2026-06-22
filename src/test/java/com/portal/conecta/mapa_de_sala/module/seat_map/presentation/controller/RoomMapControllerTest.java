@@ -1,11 +1,6 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.controller;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.MoveStudentUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.InvalidLayoutPositionTypeException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.RoomMapAlreadyArchivedException;
@@ -90,6 +85,9 @@ class RoomMapControllerTest {
 
     @MockitoBean
     private RoomMapLocationMapper roomMapLocationMapper;
+
+    @MockitoBean
+    private UpdateRoomMapAllocationsUseCase updateRoomMapAllocationsUseCase;
 
     private final UUID mapId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private final UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
