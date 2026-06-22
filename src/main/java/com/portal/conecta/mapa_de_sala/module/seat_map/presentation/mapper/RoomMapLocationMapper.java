@@ -1,10 +1,12 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.MoveStudentCommand;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapAllocationsCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapLocationCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapLocationRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapAllocationsRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapLocationRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapLocationResponse;
 import org.mapstruct.BeanMapping;
@@ -52,5 +54,9 @@ public interface RoomMapLocationMapper {
 
     default MoveStudentCommand toMoveCommand(UUID roomMapId, MoveStudentRequest request) {
         return new MoveStudentCommand(roomMapId, request);
+    }
+
+    default UpdateRoomMapAllocationsCommand toUpdateAllocationsCommand(UUID roomMapId, UpdateRoomMapAllocationsRequest request) {
+        return new UpdateRoomMapAllocationsCommand(roomMapId, request);
     }
 }
