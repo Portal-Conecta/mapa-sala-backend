@@ -2,6 +2,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapInitialAllocationCommand;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.service.RoomMapReplicationService;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
@@ -32,6 +33,7 @@ public class CreateRoomMapUseCase {
     private final RoomMapAllocationValidator allocationValidator;
     private final SeatNumberCalculator seatNumberCalculator;
     private final RoomMapPositionResolver positionResolver;
+    private final RoomMapReplicationService roomMapReplicationService;
 
     @Transactional
     public UUID execute(CreateRoomMapCommand command) {
@@ -76,6 +78,7 @@ public class CreateRoomMapUseCase {
         );
 
         RoomMap savedMap = roomMapRepository.save(roomMap);
+        roomMapReplicationService.replicateToCompatibleRooms(savedMap, locations);
 
         return savedMap.getId();
     }

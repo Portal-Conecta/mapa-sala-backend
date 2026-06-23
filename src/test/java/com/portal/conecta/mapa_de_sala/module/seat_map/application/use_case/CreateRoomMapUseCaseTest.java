@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapInitialAllocationCommand;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.service.RoomMapReplicationService;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
@@ -48,6 +49,7 @@ class CreateRoomMapUseCaseTest {
     private RoomMapAllocationValidator allocationValidator;
     private SeatNumberCalculator seatNumberCalculator;
     private RoomMapPositionResolver positionResolver;
+    private RoomMapReplicationService roomMapReplicationService;
 
     private CreateRoomMapUseCase useCase;
 
@@ -68,6 +70,7 @@ class CreateRoomMapUseCaseTest {
         allocationValidator = new RoomMapAllocationValidator();
         seatNumberCalculator = new SeatNumberCalculator();
         positionResolver = new RoomMapPositionResolver();
+        roomMapReplicationService = mock(RoomMapReplicationService.class);
 
         useCase = new CreateRoomMapUseCase(
                 requestContextProvider,
@@ -77,7 +80,8 @@ class CreateRoomMapUseCaseTest {
                 creationValidator,
                 allocationValidator,
                 seatNumberCalculator,
-                positionResolver
+                positionResolver,
+                roomMapReplicationService
         );
 
         classId = UUID.randomUUID();
@@ -129,26 +133,26 @@ class CreateRoomMapUseCaseTest {
 
     @Test
     void deveRepassarExceptionQuandoCreationValidatorNegarPreCondicoes() {
-        doThrow(new AccessDeniedException("Docente não vinculado à turma."))
+        doThrow(new AccessDeniedException("Docente nÃ£o vinculado Ã  turma."))
                 .when(creationValidator).validatePreConditions(any(), any(), any());
 
         CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
 
         assertThatThrownBy(() -> useCase.execute(command))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Docente não vinculado à turma.");
+                .hasMessageContaining("Docente nÃ£o vinculado Ã  turma.");
     }
 
     @Test
     void deveRepassarConflictQuandoCreationValidatorIdentificarMapaAtivo() {
-        doThrow(new ConflictException("Já existe um mapa ativo para esta turma e sala."))
+        doThrow(new ConflictException("JÃ¡ existe um mapa ativo para esta turma e sala."))
                 .when(creationValidator).validatePreConditions(any(), any(), any());
 
         CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
 
         assertThatThrownBy(() -> useCase.execute(command))
                 .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("Já existe um mapa ativo para esta turma e sala.");
+                .hasMessageContaining("JÃ¡ existe um mapa ativo para esta turma e sala.");
     }
 
 
@@ -321,6 +325,20 @@ class CreateRoomMapUseCaseTest {
         assertThat(generatedId).isNotNull();
     }
 
+    @Test
+    void deveInvocarReplicacaoAposSalvarMapaPrincipal() {
+        List<LayoutPosition> positions = twoStudentPositionsTemplate();
+        when(positionRepository.findByLayoutTemplateIdOrderByPositionYAscPositionXAsc(templateId))
+                .thenReturn(positions);
+
+        CreateRoomMapCommand command = new CreateRoomMapCommand(classId, roomId, templateId, List.of());
+
+        useCase.execute(command);
+
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(roomMapRepository, roomMapReplicationService);
+        inOrder.verify(roomMapRepository).save(any(RoomMap.class));
+        inOrder.verify(roomMapReplicationService).replicateToCompatibleRooms(any(RoomMap.class), any());
+    }
     @Test
     void deveMarcarTemplateESalvarMapaComLayoutTemplateIdSnapshot() {
         List<LayoutPosition> positions = twoStudentPositionsTemplate();
