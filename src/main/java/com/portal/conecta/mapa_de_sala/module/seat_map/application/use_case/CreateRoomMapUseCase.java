@@ -3,6 +3,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapInitialAllocationCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.service.RoomMapReplicationService;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
@@ -59,16 +60,12 @@ public class CreateRoomMapUseCase {
                 LayoutPosition layoutPosition = templatePositions.stream()
                         .filter(position -> position.getId().equals(positionId))
                         .findFirst()
-                        .orElseThrow(() -> new ResourceNotFoundException("Posicao", positionId));
+                        .orElseThrow(() -> new BadRequestException("Posicao nao pertence ao template."));
 
                 studentIds.add(locCommand.studentId());
                 positionIds.add(positionId);
 
-                RoomMapLocation location = new RoomMapLocation();
-                location.setStudentId(locCommand.studentId());
-                location.setLayoutPositionId(positionId);
-                location.setLayoutPosition(layoutPosition);
-                locations.add(location);
+                locations.add(RoomMapLocation.create(locCommand.studentId(), layoutPosition));
             }
 
             allocationValidator.validate(studentIds, positionIds, templatePositions);

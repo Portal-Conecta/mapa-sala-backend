@@ -4,7 +4,6 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.RoomMapHisto
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomLayout;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapHistory;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapLocation;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomLayoutRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapHistoryRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
@@ -95,29 +94,7 @@ public class RoomMapReplicationService {
                 return false;
             }
 
-            RoomMap clone = new RoomMap();
-            clone.setClassId(sourceMap.getClassId());
-            clone.setRoomId(targetRoomId);
-            clone.setLayoutTemplateId(sourceMap.getLayoutTemplateId());
-            clone.setLayoutTemplate(sourceMap.getLayoutTemplate());
-
-            sourceMap.getLocations().forEach(sourceLocation -> {
-                RoomMapLocation cloneLocation = new RoomMapLocation();
-                cloneLocation.setStudentId(sourceLocation.getStudentId());
-                cloneLocation.setLayoutPositionId(sourceLocation.getLayoutPositionId());
-                cloneLocation.setLayoutPosition(sourceLocation.getLayoutPosition());
-                cloneLocation.setRoomMap(clone);
-                clone.getLocations().add(cloneLocation);
-            });
-
-            RoomMapHistory history = new RoomMapHistory();
-            history.setRoomMap(clone);
-            history.setUserId(userId);
-            history.setAction(RoomMapHistoryAction.MAP_REPLICATED);
-            history.setDetails("Mapa criado por replica\u00e7\u00e3o a partir do mapa " + sourceMapId + ".");
-            clone.getHistory().add(history);
-
-            roomMapRepository.save(clone);
+            roomMapRepository.save(RoomMap.replicateFrom(sourceMap, targetRoomId, userId));
             return true;
         });
         return Boolean.TRUE.equals(created);
@@ -125,13 +102,12 @@ public class RoomMapReplicationService {
 
     private void recordSourceReplication(UUID sourceMapId, UUID userId, List<UUID> replicatedRoomIds) {
         requiresNew().executeWithoutResult(status -> {
-            RoomMapHistory history = new RoomMapHistory();
-            history.setRoomMap(roomMapRepository.getReferenceById(sourceMapId));
-            history.setUserId(userId);
-            history.setAction(RoomMapHistoryAction.MAP_REPLICATED);
-            history.setDetails("Mapa replicado para " + replicatedRoomIds.size() + " sala(s): " + replicatedRoomIds + ".");
-
-            roomMapHistoryRepository.save(history);
+            roomMapHistoryRepository.save(RoomMapHistory.create(
+                    roomMapRepository.getReferenceById(sourceMapId),
+                    userId,
+                    RoomMapHistoryAction.MAP_REPLICATED,
+                    "Mapa replicado para " + replicatedRoomIds.size() + " sala(s): " + replicatedRoomIds + "."
+            ));
         });
     }
 
