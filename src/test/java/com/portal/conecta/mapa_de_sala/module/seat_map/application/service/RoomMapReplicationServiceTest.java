@@ -17,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,6 +49,9 @@ class RoomMapReplicationServiceTest {
     @Mock
     private RequestContextProvider requestContextProvider;
 
+    @Mock
+    private PlatformTransactionManager transactionManager;
+
     private RoomMapReplicationService service;
 
     private UUID classId;
@@ -63,7 +69,8 @@ class RoomMapReplicationServiceTest {
                 roomLayoutRepository,
                 roomMapRepository,
                 recordRoomMapHistoryUseCase,
-                requestContextProvider
+                requestContextProvider,
+                transactionManager
         );
 
         classId = UUID.randomUUID();
@@ -86,6 +93,11 @@ class RoomMapReplicationServiceTest {
                 location(UUID.randomUUID(), UUID.randomUUID()),
                 location(UUID.randomUUID(), UUID.randomUUID())
         );
+
+        lenient().when(transactionManager.getTransaction(any()))
+                .thenReturn(new SimpleTransactionStatus());
+        lenient().when(requestContextProvider.getRequestContext())
+                .thenReturn(new RequestContext(userId, TypeUser.TEACHER, List.of()));
     }
 
     @Test
@@ -128,13 +140,13 @@ class RoomMapReplicationServiceTest {
                 cloneId,
                 RoomMapHistoryAction.MAP_REPLICATED.name(),
                 userId,
-                "Mapa replicado a partir do mapa " + sourceMapId
+                "Mapa criado por replicação a partir do mapa " + sourceMapId + "."
         );
         verify(recordRoomMapHistoryUseCase).record(
                 sourceMapId,
                 RoomMapHistoryAction.MAP_REPLICATED.name(),
                 userId,
-                "Mapa replicado para as salas [" + destinationRoomId + "]"
+                "Mapa replicado para 1 sala(s): [" + destinationRoomId + "]."
         );
     }
 
@@ -194,13 +206,13 @@ class RoomMapReplicationServiceTest {
                 successfulCloneId,
                 RoomMapHistoryAction.MAP_REPLICATED.name(),
                 userId,
-                "Mapa replicado a partir do mapa " + sourceMapId
+                "Mapa criado por replicação a partir do mapa " + sourceMapId + "."
         );
         verify(recordRoomMapHistoryUseCase).record(
                 sourceMapId,
                 RoomMapHistoryAction.MAP_REPLICATED.name(),
                 userId,
-                "Mapa replicado para as salas [" + successfulRoomId + "]"
+                "Mapa replicado para 1 sala(s): [" + successfulRoomId + "]."
         );
     }
 

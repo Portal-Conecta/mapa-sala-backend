@@ -63,6 +63,10 @@ public class CreateRoomMapUseCase {
                 RoomMapLocation location = new RoomMapLocation();
                 location.setStudentId(locCommand.studentId());
                 location.setLayoutPositionId(positionId);
+                templatePositions.stream()
+                        .filter(position -> position.getId().equals(positionId))
+                        .findFirst()
+                        .ifPresent(location::setLayoutPosition);
                 locations.add(location);
             }
 

@@ -11,6 +11,10 @@ import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +29,29 @@ public class RoomMapReplicationService {
     private final RoomMapRepository roomMapRepository;
     private final RecordRoomMapHistoryUseCase recordRoomMapHistoryUseCase;
     private final RequestContextProvider requestContextProvider;
+    private final PlatformTransactionManager transactionManager;
 
     public void replicateToCompatibleRooms(RoomMap sourceMap, List<RoomMapLocation> sourceLocations) {
+        UUID userId = requestContextProvider.getRequestContext().userId();
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    doReplicateToCompatibleRooms(sourceMap, sourceLocations, userId);
+                }
+            });
+            return;
+        }
+
+        doReplicateToCompatibleRooms(sourceMap, sourceLocations, userId);
+    }
+
+    private void doReplicateToCompatibleRooms(RoomMap sourceMap, List<RoomMapLocation> sourceLocations, UUID userId) {
         try {
             List<UUID> replicatedRoomIds = new ArrayList<>();
             UUID layoutTemplateId = sourceMap.getLayoutTemplateId();
+            TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
             for (RoomLayout roomLayout : roomLayoutRepository.findByLayoutTemplateId(layoutTemplateId)) {
                 UUID destinationRoomId = roomLayout.getRoomId();
@@ -39,29 +61,35 @@ public class RoomMapReplicationService {
                 }
 
                 try {
-                    if (roomMapRepository
-                            .findByClassIdAndRoomIdAndRemovedAtIsNull(sourceMap.getClassId(), destinationRoomId)
-                            .isPresent()) {
-                        continue;
+                    boolean replicated = Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+                        if (roomMapRepository
+                                .findByClassIdAndRoomIdAndRemovedAtIsNull(sourceMap.getClassId(), destinationRoomId)
+                                .isPresent()) {
+                            return false;
+                        }
+
+                        RoomMap clonedMap = cloneRoomMap(sourceMap, sourceLocations, destinationRoomId);
+                        RoomMap savedClone = roomMapRepository.save(clonedMap);
+
+                        recordRoomMapHistoryUseCase.record(
+                                savedClone.getId(),
+                                RoomMapHistoryAction.MAP_REPLICATED.name(),
+                                userId,
+                                "Mapa criado por replicação a partir do mapa " + sourceMap.getId() + "."
+                        );
+
+                        return true;
+                    }));
+
+                    if (replicated) {
+                        replicatedRoomIds.add(destinationRoomId);
                     }
-
-                    RoomMap clonedMap = cloneRoomMap(sourceMap, sourceLocations, destinationRoomId);
-                    RoomMap savedClone = roomMapRepository.save(clonedMap);
-
-                    recordRoomMapHistoryUseCase.record(
-                            savedClone.getId(),
-                            RoomMapHistoryAction.MAP_REPLICATED.name(),
-                            requestContextProvider.getRequestContext().userId(),
-                            "Mapa replicado a partir do mapa " + sourceMap.getId()
-                    );
-
-                    replicatedRoomIds.add(destinationRoomId);
                 } catch (Exception ex) {
                     log.warn("Failed to replicate room map to roomId={}", destinationRoomId, ex);
                 }
             }
 
-            recordSourceHistoryWhenNeeded(sourceMap, replicatedRoomIds);
+            recordSourceHistoryWhenNeeded(sourceMap, replicatedRoomIds, userId, transactionTemplate);
         } catch (Exception ex) {
             log.warn("Failed to replicate room map from sourceRoomMapId={}", sourceMap.getId(), ex);
         }
@@ -88,18 +116,23 @@ public class RoomMapReplicationService {
         return clonedMap;
     }
 
-    private void recordSourceHistoryWhenNeeded(RoomMap sourceMap, List<UUID> replicatedRoomIds) {
+    private void recordSourceHistoryWhenNeeded(
+            RoomMap sourceMap,
+            List<UUID> replicatedRoomIds,
+            UUID userId,
+            TransactionTemplate transactionTemplate
+    ) {
         if (replicatedRoomIds.isEmpty()) {
             return;
         }
 
         try {
-            recordRoomMapHistoryUseCase.record(
+            transactionTemplate.executeWithoutResult(status -> recordRoomMapHistoryUseCase.record(
                     sourceMap.getId(),
                     RoomMapHistoryAction.MAP_REPLICATED.name(),
-                    requestContextProvider.getRequestContext().userId(),
-                    "Mapa replicado para as salas " + replicatedRoomIds
-            );
+                    userId,
+                    "Mapa replicado para " + replicatedRoomIds.size() + " sala(s): " + replicatedRoomIds + "."
+            ));
         } catch (Exception ex) {
             log.warn("Failed to record replication history for sourceRoomMapId={}", sourceMap.getId(), ex);
         }
