@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapInitialAllocationCommand;
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.service.RoomMapReplicationService;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.enums.LayoutPositionType;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
@@ -48,6 +50,7 @@ class CreateRoomMapUseCaseTest {
     private RoomMapAllocationValidator allocationValidator;
     private SeatNumberCalculator seatNumberCalculator;
     private RoomMapPositionResolver positionResolver;
+    private RoomMapReplicationService replicationService;
 
     private CreateRoomMapUseCase useCase;
 
@@ -68,6 +71,7 @@ class CreateRoomMapUseCaseTest {
         allocationValidator = new RoomMapAllocationValidator();
         seatNumberCalculator = new SeatNumberCalculator();
         positionResolver = new RoomMapPositionResolver();
+        replicationService = mock(RoomMapReplicationService.class);
 
         useCase = new CreateRoomMapUseCase(
                 requestContextProvider,
@@ -77,7 +81,8 @@ class CreateRoomMapUseCaseTest {
                 creationValidator,
                 allocationValidator,
                 seatNumberCalculator,
-                positionResolver
+                positionResolver,
+                replicationService
         );
 
         classId = UUID.randomUUID();
@@ -283,6 +288,7 @@ class CreateRoomMapUseCaseTest {
         UUID generatedId = useCase.execute(command);
 
         assertThat(generatedId).isNotNull();
+        verify(replicationService).replicateAfterCommit(any(RoomMap.class), any(UUID.class));
     }
 
     @Test
@@ -301,6 +307,9 @@ class CreateRoomMapUseCaseTest {
         UUID generatedId = useCase.execute(command);
 
         assertThat(generatedId).isNotNull();
+        org.mockito.ArgumentCaptor<RoomMap> captor = org.mockito.ArgumentCaptor.forClass(RoomMap.class);
+        verify(roomMapRepository).save(captor.capture());
+        assertThat(captor.getValue().getLocations().get(0).getLayoutPosition()).isSameAs(positions.get(0));
     }
 
     @Test

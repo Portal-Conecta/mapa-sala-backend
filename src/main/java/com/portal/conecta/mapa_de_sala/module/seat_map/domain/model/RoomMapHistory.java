@@ -46,4 +46,18 @@ public class RoomMapHistory extends BaseAuditEntity {
     @Lob
     @Column(name = "details", columnDefinition = "TEXT")
     private String details;
+
+    public static RoomMapHistory create(
+            RoomMap roomMap,
+            UUID userId,
+            RoomMapHistoryAction action,
+            String details
+    ) {
+        RoomMapHistory history = new RoomMapHistory();
+        history.setRoomMap(roomMap);
+        history.setUserId(userId);
+        history.setAction(action);
+        history.setDetails(details);
+        return history;
+    }
 }
