@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class MoveStudentUseCase {
 
@@ -37,6 +36,7 @@ public class MoveStudentUseCase {
     private final RoomMapHistoryRepository roomMapHistoryRepository;
     private final RequestContextProvider requestContextProvider;
 
+    @Transactional
     public void execute(MoveStudentCommand command) {
         UUID roomMapId = command.roomMapId();
         UUID studentId = command.data().studentId();

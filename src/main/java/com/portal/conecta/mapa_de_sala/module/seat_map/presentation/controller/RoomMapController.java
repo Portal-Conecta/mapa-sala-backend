@@ -4,9 +4,11 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.UpdateRoomMapAllocationsCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.*;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.PaginationPolicy;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapAllocationsRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapLocationMapper;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapMapper;
 
@@ -15,14 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomMapCommand;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.CreateRoomMapRequest;
@@ -58,6 +53,7 @@ public class RoomMapController {
     private final RoomMapMapper roomMapMapper;
     private final RoomMapLocationMapper roomMapLocationMapper;
     private final MoveStudentUseCase moveStudentUseCase;
+    private final UpdateRoomMapAllocationsUseCase updateRoomMapAllocationsUseCase;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
@@ -202,5 +198,23 @@ public class RoomMapController {
     ) {
         moveStudentUseCase.execute(roomMapLocationMapper.toMoveCommand(id, request));
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/allocations")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @Operation(summary = "Atualizar alocações do mapa de sala",
+            description = "Substitui atomicamente todas as alocações do mapa pelo estado recebido. ")
+    @ApiResponse(responseCode = "200", description = "Alocações atualizadas com sucesso")
+    @ApiResponse(responseCode = "400", description = "Validação de alocações falhou (duplicatas, posição inválida, aluno ausente ou fora da turma)")
+    @ApiResponse(responseCode = "401", description = "Requisição sem autenticação")
+    @ApiResponse(responseCode = "403", description = "Perfil sem permissão ou docente sem vínculo com a turma")
+    @ApiResponse(responseCode = "404", description = "Mapa não encontrado ou arquivado")
+    public ResponseEntity<RoomMapViewResponse> updateAllocations(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateRoomMapAllocationsRequest request
+    ) {
+        UpdateRoomMapAllocationsCommand command = new UpdateRoomMapAllocationsCommand(id, request);
+        RoomMapViewResponse response = updateRoomMapAllocationsUseCase.execute(command);
+        return ResponseEntity.ok(response);
     }
 }
