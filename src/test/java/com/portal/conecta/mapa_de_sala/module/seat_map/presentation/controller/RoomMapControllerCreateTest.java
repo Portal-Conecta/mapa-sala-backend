@@ -187,7 +187,7 @@ class RoomMapControllerCreateTest {
         mockMvc.perform(post("/api/mapas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequestWithoutLocations())))
-                .andExpect(status().isBadRequest());
+                 .andExpect(status().isBadRequest());
     }
 
     @Test

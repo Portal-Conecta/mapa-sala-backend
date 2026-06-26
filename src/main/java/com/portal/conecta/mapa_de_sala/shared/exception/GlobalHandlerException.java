@@ -57,18 +57,6 @@ public class GlobalHandlerException {
     }
 
     //400 - RN
-    @ExceptionHandler({
-            BadRequestException.class,
-            RoomMapAlreadyArchivedException.class,
-            InvalidPaginationException.class,
-            InvalidLayoutPositionTypeException.class
-    })
-    public ResponseEntity<ApiReponseException> handleBadRequest(
-            BadRequestException exception,
-            HttpServletRequest request
-    ) {
-        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
-    }
 
     //400 - @Valid @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -160,16 +148,15 @@ public class GlobalHandlerException {
         return buildResponse(HttpStatus.CONFLICT, message, request);
     }
 
-    // 500 — genérico
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiReponseException> handleRuntime(
-            RuntimeException exception,
+
+
+    // 403 — lançada por use cases / services
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiReponseException> handleAccessDenied(
+            AccessDeniedException exception,
             HttpServletRequest request
     ) {
-        log.error("Erro inesperado: ", exception);
-
-        var message = new RuntimeException("Ocorreu um erro inesperado.");
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
+        return buildResponse(HttpStatus.FORBIDDEN, exception.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -202,6 +189,14 @@ public class GlobalHandlerException {
     @ExceptionHandler(InvalidLayoutPositionTypeException.class)
     public ResponseEntity<ApiReponseException> handleInvalidLayoutPositionType(
             InvalidLayoutPositionTypeException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiReponseException> handleBadRequest(
+            BadRequestException exception,
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception, request);
