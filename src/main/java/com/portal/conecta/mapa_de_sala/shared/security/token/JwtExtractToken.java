@@ -30,10 +30,8 @@ public class JwtExtractToken {
 
         String userId = claims.getSubject();
         TypeUser userType = TypeUser.valueOf(claims.get("userType", String.class));
-        String permissionVersion = claims.get("permissionVersion", String.class);
         List<ContextClass> classes = extractClasses(claims.get("classes"));
-
-        return new CustomUserDetails(userId, userType, classes, permissionVersion);
+        return new CustomUserDetails(userId, userType, classes);
     }
 
     public boolean isValidToken(String token){

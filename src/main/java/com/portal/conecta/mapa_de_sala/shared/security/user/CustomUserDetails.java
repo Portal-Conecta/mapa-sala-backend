@@ -18,14 +18,12 @@ public class CustomUserDetails implements UserDetails {
     private final String userId;
     private final TypeUser userType;
     private final List<ContextClass> classes;
-    private final String permissionVersion;
     private final List<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(String userId, TypeUser userType, List<ContextClass> classes, String permissionVersion) {
+    public CustomUserDetails(String userId, TypeUser userType, List<ContextClass> classes) {
         this.userId = userId;
         this.userType = userType;
         this.classes = classes;
-        this.permissionVersion = permissionVersion;
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_"+userType));
     }
 
