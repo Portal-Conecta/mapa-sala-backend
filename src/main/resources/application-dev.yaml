@@ -31,8 +31,6 @@ hub:
       - cccccccc-cccc-cccc-cccc-cccccccccccc
     room-ids:
       - 11111111-1111-1111-1111-111111111111
-    user-room-links:
-      - cccccccc-cccc-cccc-cccc-cccccccccccc:11111111-1111-1111-1111-111111111111
     students-by-class:
       bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb:
         - id: dddddddd-dddd-dddd-dddd-dddddddddddd
