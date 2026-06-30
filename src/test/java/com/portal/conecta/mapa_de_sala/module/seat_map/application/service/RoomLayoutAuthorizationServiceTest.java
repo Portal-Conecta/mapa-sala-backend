@@ -1,6 +1,8 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.service;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
+import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
+import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,43 +24,58 @@ import static org.mockito.Mockito.when;
 class RoomLayoutAuthorizationServiceTest {
 
     @Mock
-    private HubRoomPort hubRoomPort;
+    private RoomMapRepository roomMapRepository;
 
     private RoomLayoutAuthorizationService authorizationService;
 
     private final UUID roomId = UUID.randomUUID();
     private final UUID userId = UUID.randomUUID();
+    private final UUID classId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        authorizationService = new RoomLayoutAuthorizationService(hubRoomPort);
+        authorizationService = new RoomLayoutAuthorizationService(roomMapRepository);
     }
 
     @Test
-    void checkReadAccess_shouldAllowGlobalProfilesWithoutHubCheck() {
+    void devePermitirPerfilGlobalSemConsultarBanco() {
         var user = new RequestContext(userId, TypeUser.SENAI, List.of());
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
                 .doesNotThrowAnyException();
 
-        verifyNoInteractions(hubRoomPort);
+        verifyNoInteractions(roomMapRepository);
     }
 
     @Test
-    void checkReadAccess_shouldAllowLinkedAprendiz() {
-        var user = new RequestContext(userId, TypeUser.STUDENT, List.of());
-        when(hubRoomPort.isUserLinkedToRoom(userId, roomId)).thenReturn(true);
+    void devePermitirProfessorComTurmaVinculadaASala() {
+        var user = new RequestContext(userId, TypeUser.TEACHER,
+                List.of(new ContextClass(classId, ClassRole.TEACHER)));
+        when(roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), roomId))
+                .thenReturn(true);
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    void checkReadAccess_shouldDenyUnlinkedDocente() {
-        var user = new RequestContext(userId, TypeUser.TEACHER, List.of());
-        when(hubRoomPort.isUserLinkedToRoom(userId, roomId)).thenReturn(false);
+    void deveNegarProfessorSemTurmaVinculadaASala() {
+        var user = new RequestContext(userId, TypeUser.TEACHER,
+                List.of(new ContextClass(classId, ClassRole.TEACHER)));
+        when(roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), roomId))
+                .thenReturn(false);
 
         assertThatThrownBy(() -> authorizationService.checkReadAccess(user, roomId))
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void deveNegarProfessorSemNenhumaTurmaNoToken() {
+        var user = new RequestContext(userId, TypeUser.TEACHER, List.of());
+
+        assertThatThrownBy(() -> authorizationService.checkReadAccess(user, roomId))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verifyNoInteractions(roomMapRepository);
     }
 }
