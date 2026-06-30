@@ -7,10 +7,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMapHistory;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapHistoryRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
-import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
-import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
+import com.portal.conecta.mapa_de_sala.shared.context.*;
 import com.portal.conecta.mapa_de_sala.shared.exception.UnauthorizedUserException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,7 +75,7 @@ class ArchiveRoomMapUseCaseTest {
                 .thenReturn(new RequestContext(
                         userId,
                         TypeUser.TEACHER,
-                        List.of(new ContextClass(classId, "TEACHER"))
+                        List.of(new ContextClass(classId, ClassRole.TEACHER))
                 ));
 
         useCase.execute(mapId);
@@ -126,7 +123,7 @@ class ArchiveRoomMapUseCaseTest {
                 .thenReturn(new RequestContext(
                         userId,
                         TypeUser.TEACHER,
-                        List.of(new ContextClass(otherClassId, "TEACHER"))
+                        List.of(new ContextClass(otherClassId, ClassRole.TEACHER))
                 ));
 
         assertThatThrownBy(() -> useCase.execute(mapId))
@@ -145,7 +142,7 @@ class ArchiveRoomMapUseCaseTest {
                 .thenReturn(new RequestContext(
                         userId,
                         TypeUser.STUDENT,
-                        List.of(new ContextClass(classId, "STUDENT"))
+                        List.of(new ContextClass(classId, ClassRole.STUDENT))
                 ));
 
         assertThatThrownBy(() -> useCase.execute(mapId))
@@ -181,7 +178,7 @@ class ArchiveRoomMapUseCaseTest {
         var user = new RequestContext(
                 userId,
                 TypeUser.TEACHER,
-                List.of(new ContextClass(classId, "TEACHER"))
+                List.of(new ContextClass(classId, ClassRole.TEACHER))
         );
 
         assertThat(useCase.isUserAuthorizedToArchiveRoomMap(user, roomMap)).isTrue();
@@ -193,7 +190,7 @@ class ArchiveRoomMapUseCaseTest {
         var user = new RequestContext(
                 userId,
                 TypeUser.TEACHER,
-                List.of(new ContextClass(UUID.randomUUID(), "TEACHER"))
+                List.of(new ContextClass(UUID.randomUUID(), ClassRole.TEACHER))
         );
 
         assertThat(useCase.isUserAuthorizedToArchiveRoomMap(user, roomMap)).isFalse();

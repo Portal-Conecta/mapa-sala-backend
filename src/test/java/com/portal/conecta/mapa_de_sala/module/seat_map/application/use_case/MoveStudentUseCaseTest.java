@@ -16,10 +16,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapHistor
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapLocationRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.MoveStudentRequest;
-import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
-import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
+import com.portal.conecta.mapa_de_sala.shared.context.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -171,7 +168,7 @@ class MoveStudentUseCaseTest {
         when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext()).thenReturn(
                 new RequestContext(userId, TypeUser.TEACHER,
-                        List.of(new ContextClass(UUID.randomUUID(), "TEACHER")))
+                        List.of(new ContextClass(UUID.randomUUID(), ClassRole.TEACHER)))
         );
 
         assertThatThrownBy(() -> useCase.execute(command(null)))
@@ -247,7 +244,7 @@ class MoveStudentUseCaseTest {
 
     private RequestContext teacherContext() {
         return new RequestContext(userId, TypeUser.TEACHER,
-                List.of(new ContextClass(classId, "TEACHER")));
+                List.of(new ContextClass(classId, ClassRole.TEACHER)));
     }
 
     private LayoutPosition studentPosition(UUID id) {

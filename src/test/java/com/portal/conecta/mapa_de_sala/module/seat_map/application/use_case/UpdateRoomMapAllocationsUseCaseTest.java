@@ -22,10 +22,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapReposi
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.AllocationEntryRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.request.UpdateRoomMapAllocationsRequest;
 import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.dto.response.RoomMapViewResponse;
-import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
-import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
+import com.portal.conecta.mapa_de_sala.shared.context.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -174,7 +171,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
         when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext()).thenReturn(
                 new RequestContext(userId, TypeUser.TEACHER,
-                        List.of(new ContextClass(UUID.randomUUID(), "TEACHER")))
+                        List.of(new ContextClass(UUID.randomUUID(), ClassRole.TEACHER)))
         );
 
         assertThatThrownBy(() -> useCase.execute(command(entry(student1, seat1))))
@@ -187,7 +184,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
     void execute_shouldThrowWhenStudentTries() {
         when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(activeRoomMap()));
         when(requestContextProvider.getRequestContext()).thenReturn(
-                new RequestContext(userId, TypeUser.STUDENT, List.of(new ContextClass(classId, "STUDENT")))
+                new RequestContext(userId, TypeUser.STUDENT, List.of(new ContextClass(classId, ClassRole.STUDENT)))
         );
 
         assertThatThrownBy(() -> useCase.execute(command(entry(student1, seat1))))
@@ -231,7 +228,7 @@ class UpdateRoomMapAllocationsUseCaseTest {
     }
 
     private RequestContext teacherContext() {
-        return new RequestContext(userId, TypeUser.TEACHER, List.of(new ContextClass(classId, "TEACHER")));
+        return new RequestContext(userId, TypeUser.TEACHER, List.of(new ContextClass(classId, ClassRole.TEACHER)));
     }
 
     private RoomMap activeRoomMap() {
