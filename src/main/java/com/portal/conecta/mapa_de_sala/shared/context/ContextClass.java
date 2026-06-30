@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public record ContextClass(
     UUID classId,
-    String role
+    ClassRole role
 ) {
 
 }

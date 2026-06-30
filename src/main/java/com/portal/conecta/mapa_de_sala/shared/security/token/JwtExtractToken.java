@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -83,7 +84,7 @@ public class JwtExtractToken {
 
         return new ContextClass(
                 UUID.fromString(classId.toString()),
-                role.toString()
+                ClassRole.valueOf(role.toString())
         );
     }
 }
