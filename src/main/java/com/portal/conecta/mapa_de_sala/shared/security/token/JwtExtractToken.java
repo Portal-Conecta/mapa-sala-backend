@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +31,8 @@ public class JwtExtractToken {
 
         String userId = claims.getSubject();
         TypeUser userType = TypeUser.valueOf(claims.get("userType", String.class));
-        String permissionVersion = claims.get("permissionVersion", String.class);
         List<ContextClass> classes = extractClasses(claims.get("classes"));
-
-        return new CustomUserDetails(userId, userType, classes, permissionVersion);
+        return new CustomUserDetails(userId, userType, classes);
     }
 
     public boolean isValidToken(String token){
@@ -85,7 +84,7 @@ public class JwtExtractToken {
 
         return new ContextClass(
                 UUID.fromString(classId.toString()),
-                role.toString()
+                ClassRole.valueOf(role.toString())
         );
     }
 }

@@ -56,4 +56,16 @@ public class RoomMapLocation extends BaseAuditEntity {
     /** FK → Hub User (aprendiz) — sem entidade JPA local */
     @Column(name = "student_id", nullable = false)
     private UUID studentId;
+
+    public static RoomMapLocation create(UUID studentId, LayoutPosition layoutPosition) {
+        RoomMapLocation location = new RoomMapLocation();
+        location.setStudentId(studentId);
+        location.setLayoutPositionId(layoutPosition.getId());
+        location.setLayoutPosition(layoutPosition);
+        return location;
+    }
+
+    public static RoomMapLocation replicateFrom(RoomMapLocation sourceLocation) {
+        return create(sourceLocation.getStudentId(), sourceLocation.getLayoutPosition());
+    }
 }

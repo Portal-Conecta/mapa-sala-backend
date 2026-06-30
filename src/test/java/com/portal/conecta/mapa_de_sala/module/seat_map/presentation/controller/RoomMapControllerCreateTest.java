@@ -10,6 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.UUID;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.*;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapAllocationsUpdateValidator;
+import com.portal.conecta.mapa_de_sala.module.seat_map.presentation.mapper.RoomMapLocationMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -21,11 +24,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ArchiveRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomMapUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.GetRoomMapViewUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapHistoryUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.ListRoomMapsUseCase;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.BadRequestException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
@@ -78,6 +76,18 @@ class RoomMapControllerCreateTest {
 
     @MockitoBean
     private RoomMapMapper roomMapMapper;
+
+    @MockitoBean
+    private MoveStudentUseCase moveStudentUseCase;
+
+    @MockitoBean
+    private RoomMapLocationMapper roomMapLocationMapper;
+
+    @MockitoBean
+    private UpdateRoomMapAllocationsUseCase updateRoomMapAllocationsUseCase;
+
+    @MockitoBean
+    private RoomMapAllocationsUpdateValidator roomMapAllocationsUpdateValidator;
 
     private final UUID classId = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private final UUID roomId = UUID.fromString("22222222-2222-2222-2222-222222222222");
@@ -177,7 +187,7 @@ class RoomMapControllerCreateTest {
         mockMvc.perform(post("/api/mapas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequestWithoutLocations())))
-                .andExpect(status().isBadRequest());
+                 .andExpect(status().isBadRequest());
     }
 
     @Test

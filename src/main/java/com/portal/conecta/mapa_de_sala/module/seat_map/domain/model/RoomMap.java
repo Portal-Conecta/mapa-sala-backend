@@ -56,20 +56,47 @@ public class RoomMap extends BaseAuditEntity {
         roomMap.setLayoutTemplate(template);
 
         if (locations != null) {
-            locations.forEach(loc -> {
-                loc.setRoomMap(roomMap);
-                roomMap.getLocations().add(loc);
-            });
+            locations.forEach(roomMap::addLocation);
         }
 
-        RoomMapHistory history = new RoomMapHistory();
-        history.setRoomMap(roomMap);
-        history.setUserId(createdByUserId);
-        history.setAction(RoomMapHistoryAction.MAP_CREATION);
-        history.setDetails("Criação inicial do mapa");
-
-        roomMap.getHistory().add(history);
+        roomMap.addHistory(RoomMapHistory.create(
+                roomMap,
+                createdByUserId,
+                RoomMapHistoryAction.MAP_CREATION,
+                "Cria\u00e7\u00e3o inicial do mapa"
+        ));
 
         return roomMap;
+    }
+
+    public static RoomMap replicateFrom(RoomMap sourceMap, UUID targetRoomId, UUID userId) {
+        RoomMap roomMap = new RoomMap();
+        roomMap.setClassId(sourceMap.getClassId());
+        roomMap.setRoomId(targetRoomId);
+        roomMap.setLayoutTemplateId(sourceMap.getLayoutTemplateId());
+        roomMap.setLayoutTemplate(sourceMap.getLayoutTemplate());
+
+        sourceMap.getLocations().stream()
+                .map(RoomMapLocation::replicateFrom)
+                .forEach(roomMap::addLocation);
+
+        roomMap.addHistory(RoomMapHistory.create(
+                roomMap,
+                userId,
+                RoomMapHistoryAction.MAP_REPLICATED,
+                "Mapa criado por replica\u00e7\u00e3o a partir do mapa " + sourceMap.getId() + "."
+        ));
+
+        return roomMap;
+    }
+
+    public void addLocation(RoomMapLocation location) {
+        location.setRoomMap(this);
+        locations.add(location);
+    }
+
+    public void addHistory(RoomMapHistory history) {
+        history.setRoomMap(this);
+        this.history.add(history);
     }
 }
