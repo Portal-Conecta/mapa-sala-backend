@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -29,9 +30,14 @@ public class RoomLayoutAuthorizationService {
 
         List<UUID> classIds = user.classes().stream()
                 .map(ContextClass::classId)
+                .filter(Objects::nonNull)
                 .toList();
 
-        if (classIds.isEmpty() || !roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(classIds, roomId)) {
+        if (classIds.isEmpty()) {
+            throw new AccessDeniedException("Acesso negado à sala solicitada");
+        }
+
+        if (!roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(classIds, roomId)) {
             throw new AccessDeniedException("Acesso negado à sala solicitada");
         }
     }

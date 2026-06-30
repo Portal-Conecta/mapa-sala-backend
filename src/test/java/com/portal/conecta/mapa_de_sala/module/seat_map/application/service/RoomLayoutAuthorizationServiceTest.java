@@ -38,7 +38,7 @@ class RoomLayoutAuthorizationServiceTest {
     }
 
     @Test
-    void devePermitirPerfilGlobalSemConsultarBanco() {
+    void mustAllowGlobalProfileWithoutConsultingBank() {
         var user = new RequestContext(userId, TypeUser.SENAI, List.of());
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
@@ -48,7 +48,7 @@ class RoomLayoutAuthorizationServiceTest {
     }
 
     @Test
-    void devePermitirProfessorComTurmaVinculadaASala() {
+    void mustAllowTeacherWithClassLinkedtoRoom() {
         var user = new RequestContext(userId, TypeUser.TEACHER,
                 List.of(new ContextClass(classId, ClassRole.TEACHER)));
         when(roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), roomId))
@@ -59,7 +59,7 @@ class RoomLayoutAuthorizationServiceTest {
     }
 
     @Test
-    void deveNegarProfessorSemTurmaVinculadaASala() {
+    void mustDenyTeacherNoClassLinkedRoom() {
         var user = new RequestContext(userId, TypeUser.TEACHER,
                 List.of(new ContextClass(classId, ClassRole.TEACHER)));
         when(roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), roomId))
@@ -70,7 +70,7 @@ class RoomLayoutAuthorizationServiceTest {
     }
 
     @Test
-    void deveNegarProfessorSemNenhumaTurmaNoToken() {
+    void mustDenyProfessorWithoutNoTurmaNoToken() {
         var user = new RequestContext(userId, TypeUser.TEACHER, List.of());
 
         assertThatThrownBy(() -> authorizationService.checkReadAccess(user, roomId))
