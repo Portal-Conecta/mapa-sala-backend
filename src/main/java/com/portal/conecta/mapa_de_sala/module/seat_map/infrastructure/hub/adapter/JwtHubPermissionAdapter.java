@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubPermissionPort;
+import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 
@@ -23,7 +24,7 @@ public class JwtHubPermissionAdapter implements HubPermissionPort {
     @Override
     public List<UUID> getAccessibleClassIds(UUID userId, TypeUser userType) {
         return contextProvider.getRequestContext().classes().stream()
-                .filter(c -> TypeUser.TEACHER.name().equals(c.role()))
+                .filter(c -> ClassRole.TEACHER.equals(c.role()))
                 .map(c -> c.classId())
                 .toList();
     }

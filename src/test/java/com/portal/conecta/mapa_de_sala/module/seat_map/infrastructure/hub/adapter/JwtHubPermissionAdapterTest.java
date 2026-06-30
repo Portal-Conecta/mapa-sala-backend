@@ -1,5 +1,6 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.adapter;
 
+import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
@@ -31,8 +32,8 @@ class JwtHubPermissionAdapterTest {
         UUID userId = UUID.randomUUID();
 
         RequestContext context = new RequestContext(userId, TypeUser.TEACHER, List.of(
-                new ContextClass(classId, "TEACHER"),
-                new ContextClass(UUID.randomUUID(), "STUDENT")
+                new ContextClass(classId, ClassRole.TEACHER),
+                new ContextClass(UUID.randomUUID(), ClassRole.STUDENT)
         ));
         when(contextProvider.getRequestContext()).thenReturn(context);
 
@@ -46,7 +47,7 @@ class JwtHubPermissionAdapterTest {
         UUID userId = UUID.randomUUID();
 
         RequestContext context = new RequestContext(userId, TypeUser.TEACHER, List.of(
-                new ContextClass(UUID.randomUUID(), "STUDENT")
+                new ContextClass(UUID.randomUUID(), ClassRole.STUDENT)
         ));
         when(contextProvider.getRequestContext()).thenReturn(context);
 
