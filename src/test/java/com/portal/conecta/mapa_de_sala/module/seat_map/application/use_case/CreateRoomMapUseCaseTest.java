@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.portal.conecta.mapa_de_sala.shared.context.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,10 +35,6 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.SeatNumberC
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutPositionRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutTemplateRepository;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
-import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
-import com.portal.conecta.mapa_de_sala.shared.context.RequestContextProvider;
-import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 
 class CreateRoomMapUseCaseTest {
 
@@ -110,7 +107,7 @@ class CreateRoomMapUseCaseTest {
     private void givenRequestContext(TypeUser userType, UUID linkedClassId) {
         List<ContextClass> classes = linkedClassId == null
                 ? List.of()
-                : List.of(new ContextClass(linkedClassId, "DEFAULT"));
+                : List.of(new ContextClass(linkedClassId, ClassRole.TEACHER));
         RequestContext context = new RequestContext(UUID.randomUUID(), userType, classes);
         when(requestContextProvider.getRequestContext()).thenReturn(context);
     }
