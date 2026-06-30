@@ -5,8 +5,10 @@ spring:
     active: dev
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: validate
   flyway:
-    enabled: false
+    enabled: true
     locations: classpath:db/migration
 
 server:

@@ -3,14 +3,14 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    url: ${DB_URL:jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:sa}
     driver-class-name: org.h2.Driver
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -19,7 +19,7 @@ spring:
     init:
       mode: never
   flyway:
-    enabled: false
+    enabled: true
 
 hub:
   api:
