@@ -38,19 +38,4 @@ public class HttpHubRoomAdapter implements HubRoomPort {
         }
     }
 
-    @Override
-    public boolean isUserLinkedToRoom(UUID userId, UUID roomId) {
-        try {
-            restClient.get()
-                    .uri("/users/{userId}/rooms/{roomId}", userId, roomId)
-                    .retrieve()
-                    .toBodilessEntity();
-
-            return true;
-        } catch (HttpClientErrorException.NotFound exception) {
-            return false;
-        } catch (RestClientException exception) {
-            throw new HubIntegrationException("Serviço de vínculo usuário-sala do Hub indisponível.", exception);
-        }
-    }
 }

@@ -21,6 +21,8 @@ public interface RoomMapRepository extends JpaRepository<RoomMap, UUID> {
 
     Page<RoomMap> findByClassIdInAndRemovedAtIsNull(List<UUID> classIds, Pageable pageable);
 
+    boolean existsByClassIdInAndRoomIdAndRemovedAtIsNull(Collection<UUID> classIds, UUID roomId);
+
     Page<RoomMap> findByClassIdInAndRoomIdAndRemovedAtIsNull(List<UUID> classIds, UUID roomId, Pageable pageable);
 
     Page<RoomMap> findAllByRemovedAtIsNull(Pageable pageable);

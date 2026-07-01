@@ -36,7 +36,6 @@ class MockHubAdaptersTest {
                 List.of(CLASS_ID.toString()),
                 List.of(USER_ID.toString()),
                 List.of(ROOM_ID.toString()),
-                List.of(USER_ID + ":" + ROOM_ID),
                 Map.of(
                         CLASS_ID.toString(),
                         List.of(
@@ -54,11 +53,9 @@ class MockHubAdaptersTest {
     }
 
     @Test
-    void roomAdapter_shouldValidateKnownRoomAndUserLink() {
+    void roomAdapter_shouldValidateKnownRoom() {
         assertThat(roomAdapter.existsById(ROOM_ID)).isTrue();
         assertThat(roomAdapter.existsById(UUID.randomUUID())).isFalse();
-        assertThat(roomAdapter.isUserLinkedToRoom(USER_ID, ROOM_ID)).isTrue();
-        assertThat(roomAdapter.isUserLinkedToRoom(USER_ID, UUID.randomUUID())).isFalse();
     }
 
     @Test

@@ -15,30 +15,15 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.proper
 public class MockHubRoomAdapter implements HubRoomPort {
 
     private final Set<UUID> roomIds;
-    private final Set<String> userRoomLinks;
 
     public MockHubRoomAdapter(HubMockProperties properties) {
         this.roomIds = properties.roomIds().stream()
                 .map(UUID::fromString)
                 .collect(Collectors.toUnmodifiableSet());
-        this.userRoomLinks = Set.copyOf(properties.userRoomLinks());
     }
 
     @Override
     public boolean existsById(UUID roomId) {
         return roomIds.isEmpty() || roomIds.contains(roomId);
-    }
-
-    @Override
-    public boolean isUserLinkedToRoom(UUID userId, UUID roomId) {
-        if (userRoomLinks.isEmpty()) {
-            return existsById(roomId);
-        }
-
-        return userRoomLinks.contains(linkKey(userId, roomId));
-    }
-
-    private static String linkKey(UUID userId, UUID roomId) {
-        return userId + ":" + roomId;
     }
 }

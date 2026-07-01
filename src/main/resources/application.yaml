@@ -35,5 +35,4 @@ hub:
     class-ids: []
     user-ids: []
     room-ids: []
-    user-room-links: []
     students-by-class: {}
