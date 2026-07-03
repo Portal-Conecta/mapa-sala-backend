@@ -2,6 +2,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.presentation.controller;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,12 @@ public class RoomLayoutController {
 
     @GetMapping("/{salaId}")
     @Operation(summary = "Obter layout físico da sala",
-            description = "Retorna dimensões do grid e posições (read-only).")
+            description = "Retorna dimensões do grid e posições (read-only).",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Dados para criação do novo usuário.",
+                    required = true
+            ))
     @ApiResponse(responseCode = "200", description = "Layout encontrado")
     @ApiResponse(responseCode = "403", description = "Usuário sem vínculo com a turma da sala")
     @ApiResponse(responseCode = "404", description = "Sala ou layout não encontrado")
