@@ -29,8 +29,8 @@ management:
 
 hub:
   api:
-    url: ${HUB_API_URL:http://localhost:8080}
-    mock-enabled: ${HUB_MOCK_ENABLED:true}
+    url: ${HUB_API_URL:http://localhost:8081}
+    mock-enabled: ${HUB_MOCK_ENABLED:false}
   mock:
     class-ids: []
     user-ids: []
