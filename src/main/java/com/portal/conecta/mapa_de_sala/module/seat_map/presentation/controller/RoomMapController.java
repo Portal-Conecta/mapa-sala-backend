@@ -60,11 +60,7 @@ public class RoomMapController {
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
     @Operation(summary = "Listar mapas de sala",
             description = "Lista mapas de sala paginados, com escopo determinado pelo perfil do usuário autenticado.",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
-                    required = true
-            ))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Página de mapas de sala")
     @ApiResponse(responseCode = "403", description = "Perfil sem acesso")
     public ResponseEntity<Page<RoomMapSummaryResponse>> list(
@@ -88,11 +84,7 @@ public class RoomMapController {
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
     @Operation(summary = "Consultar histórico do mapa de sala",
             description = "Retorna o histórico de alterações do mapa em ordem decrescente por data.",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
-                    required = true
-            ))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Página do histórico do mapa")
     @ApiResponse(responseCode = "403", description = "Usuário sem acesso ao mapa")
     @ApiResponse(responseCode = "404", description = "Mapa de sala não encontrado")
@@ -115,11 +107,7 @@ public class RoomMapController {
     @PreAuthorize("hasAnyRole('STUDENT','REPRESENTATIVE','TEACHER','SENAI','WEG','ADMIN')")
     @Operation(summary = "Visualizar mapa por sala e turma",
             description = "Retorna o mapa salvo da turma na sala ou uma sugestão alfabética caso ainda não exista (RN-MS05).",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
-                    required = true
-            ))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Mapa salvo ou sugestão alfabética")
     @ApiResponse(responseCode = "403", description = "Usuário sem acesso à turma")
     @ApiResponse(responseCode = "404", description = "Sala ou turma não encontrada")
@@ -139,7 +127,7 @@ public class RoomMapController {
             description = "Cria o vínculo entre turma e sala com snapshot do layout escolhido.",
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
+                    description = "Dados para criação do mapa de sala.",
                     required = true
             )
     )
@@ -192,11 +180,7 @@ public class RoomMapController {
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     @Operation(summary = "Arquivar mapa de sala", 
                description = "Arquiva um mapa de sala existente.",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
-                    required = true
-            ))
+               security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "204", description = "Mapa de sala arquivado com sucesso")
     @ApiResponse(responseCode = "400", description = "Mapa já está arquivado")
     @ApiResponse(responseCode = "401", description = "Requisição sem autenticação")
@@ -215,7 +199,7 @@ public class RoomMapController {
             description = "Move um aprendiz para outra posição no mapa. Em caso de conflito, aplica DISPLACE (padrão) ou SWAP.",
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
+                    description = "Dados de movimentação do aprendiz no mapa.",
                     required = true
             ))
     @ApiResponse(responseCode = "204", description = "Aprendiz movido com sucesso")
@@ -237,7 +221,7 @@ public class RoomMapController {
             description = "Substitui atomicamente todas as alocações do mapa pelo estado recebido. ",
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
+                    description = "Novo estado completo das alocações do mapa.",
                     required = true
             ))
     @ApiResponse(responseCode = "200", description = "Alocações atualizadas com sucesso")

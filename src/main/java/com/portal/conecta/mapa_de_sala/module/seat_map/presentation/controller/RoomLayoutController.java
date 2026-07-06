@@ -33,11 +33,7 @@ public class RoomLayoutController {
     @GetMapping("/{salaId}")
     @Operation(summary = "Obter layout físico da sala",
             description = "Retorna dimensões do grid e posições (read-only).",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Dados para criação do novo usuário.",
-                    required = true
-            ))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "200", description = "Layout encontrado")
     @ApiResponse(responseCode = "403", description = "Usuário sem vínculo com a turma da sala")
     @ApiResponse(responseCode = "404", description = "Sala ou layout não encontrado")
