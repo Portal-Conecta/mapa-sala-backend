@@ -43,7 +43,6 @@ public class RoomMapHistory extends BaseAuditEntity {
      * Descrição livre da alteração em texto longo.
      * Não usar jsonb — campo texto simples conforme especificação.
      */
-    @Lob
     @Column(name = "details", columnDefinition = "TEXT")
     private String details;
 
