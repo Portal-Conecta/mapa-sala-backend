@@ -46,8 +46,3 @@
       secret: ${JWT_SECRET:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
       access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
       refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
-
-  dev-seed:
-    room-ids:
-      classroom: "8518ba04-0714-4c15-9d54-25b496f76945"   # cole aqui o UUID da sala 101 (CLASSROOM) criada pelo DevDataInitializer do Hub
-      laboratory: "f8b84986-1aab-4d18-ac77-08a2b3c50b86"  # cole aqui o UUID da sala 201 (LABORATORY)
