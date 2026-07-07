@@ -42,6 +42,16 @@ public class RoomLayoutAuthorizationService {
         }
     }
 
+    /**
+     * Restringe a criação de vínculo sala-layout aos perfis globais que também
+     * criam salas no Hub (ADMIN, SENAI, WEG).
+     */
+    public void checkWriteAccess(RequestContext user) {
+        if (user == null || !isGlobalProfile(user.userType())) {
+            throw new AccessDeniedException("Perfil sem permissão para vincular layout à sala.");
+        }
+    }
+
     private boolean isGlobalProfile(TypeUser type) {
         return type == TypeUser.SENAI || type == TypeUser.WEG || type == TypeUser.ADMIN;
     }
