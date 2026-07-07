@@ -1,0 +1,48 @@
+  spring:
+    config:
+      activate:
+        on-profile: dev
+    datasource:
+      url: ${DB_URL:jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+      username: ${DB_USERNAME:sa}
+      password: ${DB_PASSWORD:sa}
+      driver-class-name: org.h2.Driver
+    jpa:
+      database-platform: org.hibernate.dialect.H2Dialect
+      hibernate:
+        ddl-auto: none
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+    sql:
+      init:
+        mode: never
+    flyway:
+      enabled: true
+
+  hub:
+    api:
+      mock-enabled: ${HUB_MOCK_ENABLED:false}
+    mock:
+      class-ids:
+        - bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+      user-ids:
+        - cccccccc-cccc-cccc-cccc-cccccccccccc
+      room-ids:
+        - 11111111-1111-1111-1111-111111111111
+      students-by-class:
+        bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb:
+          - id: dddddddd-dddd-dddd-dddd-dddddddddddd
+            name: Ana Silva
+          - id: eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee
+            name: Bruno Costa
+      accessible-class-ids-by-user:
+        cccccccc-cccc-cccc-cccc-cccccccccccc:
+          - bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+
+  app:
+    jwt:
+      secret: ${JWT_SECRET:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+      access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
+      refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}

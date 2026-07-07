@@ -1,3 +1,38 @@
 spring:
   application:
-    name: mapa-de-sala
+    name: seat-map
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+
+hub:
+  api:
+    url: ${HUB_API_URL:http://localhost:8081}
+    mock-enabled: ${HUB_MOCK_ENABLED:false}
+  mock:
+    class-ids: []
+    user-ids: []
+    room-ids: []
+    students-by-class: {}
