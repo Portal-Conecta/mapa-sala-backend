@@ -6,6 +6,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
+import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -28,10 +29,12 @@ public class RoomMapCreationValidator {
             throw new ResourceNotFoundException("Sala", roomId);
         }
 
-        boolean isLinkedToClass = context.classes().stream()
-                .anyMatch(c -> c.classId().equals(classId));
-        if (!isLinkedToClass) {
-            throw new AccessDeniedException("Docente não vinculado à turma.");
+        if (!isGlobalProfile(context.userType())) {
+            boolean isLinkedToClass = context.classes().stream()
+                    .anyMatch(c -> c.classId().equals(classId));
+            if (!isLinkedToClass) {
+                throw new AccessDeniedException("Docente não vinculado à turma.");
+            }
         }
 
         boolean activeMapExists = roomMapRepository
@@ -40,5 +43,9 @@ public class RoomMapCreationValidator {
         if (activeMapExists) {
             throw new ConflictException("Já existe um mapa ativo para esta turma e sala.");
         }
+    }
+
+    private boolean isGlobalProfile(TypeUser type) {
+        return type == TypeUser.SENAI || type == TypeUser.WEG || type == TypeUser.ADMIN;
     }
 }

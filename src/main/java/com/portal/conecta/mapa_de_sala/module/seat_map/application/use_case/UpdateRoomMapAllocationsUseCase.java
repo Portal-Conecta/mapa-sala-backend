@@ -73,10 +73,9 @@ public class UpdateRoomMapAllocationsUseCase {
 
         List<RoomMapLocation> newLocations = new ArrayList<>();
         for (AllocationEntryRequest entry : entries) {
-            var location = new RoomMapLocation();
+            LayoutPosition position = positionById.get(entry.layoutPositionId());
+            RoomMapLocation location = RoomMapLocation.create(entry.studentId(), position);
             location.setRoomMap(roomMap);
-            location.setStudentId(entry.studentId());
-            location.setLayoutPosition(positionById.get(entry.layoutPositionId()));
             newLocations.add(location);
         }
 
