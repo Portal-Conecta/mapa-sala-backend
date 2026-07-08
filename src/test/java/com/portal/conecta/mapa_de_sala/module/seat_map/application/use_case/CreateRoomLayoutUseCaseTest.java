@@ -115,4 +115,17 @@ class CreateRoomLayoutUseCaseTest {
 
         verify(roomLayoutRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("deve lançar ConflictException quando a constraint única do banco for violada em corrida de concorrência")
+    void shouldThrowConflictWhenUniqueConstraintViolatedDueToRaceCondition() {
+        when(hubRoomPort.existsById(roomId)).thenReturn(true);
+        when(layoutTemplateRepository.findByIdAndActiveTrue(templateId)).thenReturn(Optional.of(template));
+        when(roomLayoutRepository.findByRoomId(roomId)).thenReturn(Optional.empty());
+        when(roomLayoutRepository.save(any(RoomLayout.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("uq_room_layout_room_id"));
+
+        assertThatThrownBy(() -> useCase.execute(command))
+                .isInstanceOf(ConflictException.class);
+    }
 }
