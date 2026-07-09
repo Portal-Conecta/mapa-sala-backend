@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record CreateRoomLayoutRequest(
-        @NotNull
+        @NotNull(message = "O identificador da sala é obrigatório.")
         UUID roomId,
-        @NotNull
+        @NotNull(message = "O identificador do template é obrigatório.")
         UUID layoutTemplateId
 ) {
 }
