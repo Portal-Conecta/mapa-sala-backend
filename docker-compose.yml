@@ -3,6 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: portal-conecta-seat-map-postgres
     restart: unless-stopped
+    labels:
+      portal.service: seat-map-postgres
+      portal.environment: ${PORTAL_ENVIRONMENT:-local}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-seat_map}
       POSTGRES_USER: ${POSTGRES_USER:-seat_map}
@@ -24,6 +27,9 @@ services:
       dockerfile: Dockerfile
     container_name: portal-conecta-seat-map-api
     restart: unless-stopped
+    labels:
+      portal.service: seat-map
+      portal.environment: ${PORTAL_ENVIRONMENT:-local}
     depends_on:
       postgres:
         condition: service_healthy
