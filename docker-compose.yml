@@ -25,6 +25,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        MAVEN_USERNAME: ${MAVEN_USERNAME:-}
+      secrets:
+        - maven_password
     container_name: portal-conecta-seat-map-api
     restart: unless-stopped
     labels:
@@ -55,3 +59,7 @@ services:
 
 volumes:
   postgres-data:
+
+secrets:
+  maven_password:
+    environment: MAVEN_PASSWORD
