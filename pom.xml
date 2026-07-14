@@ -13,6 +13,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>mapa-de-sala</name>
     <description>Módulo Mapa de Sala — Portal Conecta</description>
+    <repositories>
+        <repository>
+            <id>portal-logging</id>
+            <url>https://maven.pkg.github.com/Portal-Conecta/portal-logging</url>
+        </repository>
+    </repositories>
     <properties>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
@@ -23,6 +29,19 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-opentelemetry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.portal.conecta</groupId>
+            <artifactId>portal-logging</artifactId>
+            <version>1.0.5</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
