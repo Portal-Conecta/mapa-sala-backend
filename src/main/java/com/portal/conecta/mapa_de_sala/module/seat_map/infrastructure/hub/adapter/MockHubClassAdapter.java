@@ -8,11 +8,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.hub.HubStudent;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
-import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.exception.HubIntegrationException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.properties.HubMockProperties;
 
 @Component
@@ -49,16 +47,23 @@ public class MockHubClassAdapter implements HubClassPort {
     }
 
     @Override
-    public UUID getClassIdForUser(UUID userId) {
-        try {
-            return properties.studentsByClass().keySet().stream()
-                .map(UUID::fromString)
-                .filter(classId -> properties.studentsByClass().get(classId.toString()).stream()
-                        .anyMatch(student -> student.id().equals(userId.toString())))
-                .findFirst()
-                .orElse(null);
-        } catch (RestClientException exception) {
-            throw new HubIntegrationException("Serviço de turmas do Hub indisponível.", exception);
+    public boolean belongsToClass(UUID userId, UUID classId) {
+        List<HubMockProperties.MockStudent> students = properties.studentsByClass().get(classId.toString());
+
+        if (students == null) {
+            return false;
         }
+
+        return students.stream()
+                .anyMatch(student -> student.id().equals(userId.toString()));
+    }
+
+    @Override
+    public List<UUID> getClassIdsForUser(UUID userId) {
+        return properties.studentsByClass().entrySet().stream()
+                .filter(entry -> entry.getValue().stream()
+                        .anyMatch(student -> student.id().equals(userId.toString())))
+                .map(entry -> UUID.fromString(entry.getKey()))
+                .toList();
     }
 }
