@@ -24,7 +24,7 @@
 -- =============================================================
 -- ---------------------------------------------------------------
 -- Template A: Sala de aula 9x4, professor em x=1, corredor em x=4
--- Salas de referencia: 201, 204, 209, 210, 211 (2o pavimento)
+-- Salas de referencia: 201, 204, 212, 213 (2o pavimento)
 -- ---------------------------------------------------------------
 INSERT INTO layout_template (id, name, dimension_x, dimension_y, active, created_at, updated_at)
 VALUES ('00000000-0000-0000-0001-000000000001', '2o Pavimento - Sala de Aula 9x4 (professor x=1)', 9, 4, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
@@ -70,7 +70,7 @@ VALUES
 
 -- ---------------------------------------------------------------
 -- Template B: Sala de aula 9x4, professor em x=8 (espelhado do template A)
--- Salas de referencia: 202, 205, 206, 212 (2o pavimento)
+-- Salas de referencia: 202, 205, 206, 214 (2o pavimento)
 -- ---------------------------------------------------------------
 INSERT INTO layout_template (id, name, dimension_x, dimension_y, active, created_at, updated_at)
 VALUES ('00000000-0000-0000-0002-000000000001', '2o Pavimento - Sala de Aula 9x4 (professor x=8)', 9, 4, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
@@ -305,7 +305,7 @@ VALUES
     ('00000000-0000-0000-0006-10000000003c', '00000000-0000-0000-0006-000000000001', 12, 2, 'STUDENT', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ---------------------------------------------------------------
--- Template G: Sala 209, 6x6, professor em x=1
+-- Template G: Sala 211, 6x6, professor em x=1
 -- dimension_y=5, 25 alunos.
 -- ---------------------------------------------------------------
 INSERT INTO layout_template (id, name, dimension_x, dimension_y, active, created_at, updated_at)
