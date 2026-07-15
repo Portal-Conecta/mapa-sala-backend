@@ -48,7 +48,7 @@ public class HttpHubClassAdapter implements HubClassPort {
     public List<HubStudent> findStudentsByClassId(UUID classId) {
         try {
             HubStudentResponse[] students = restClient.get()
-                    .uri("/classes/{classId}/students", classId)
+                    .uri("/classes/{classId}/members?role=STUDENT", classId)
                     .retrieve()
                     .body(new ParameterizedTypeReference<HubStudentResponse[]>() {});
 
