@@ -56,7 +56,7 @@ public class ListRoomMapHistoryUseCase {
 
     private boolean hasAccess(UUID userId, TypeUser userType, RoomMap roomMap) {
         return switch (userType) {
-            case STUDENT, REPRESENTATIVE -> hubClassPort.getClassIdForUser(userId).equals(roomMap.getClassId());
+            case STUDENT, REPRESENTATIVE -> hubClassPort.belongsToClass(userId, roomMap.getClassId());
             case TEACHER -> hubPermissionPort.getAccessibleClassIds(userId, userType).contains(roomMap.getClassId());
             case SENAI, WEG, ADMIN -> true;
         };

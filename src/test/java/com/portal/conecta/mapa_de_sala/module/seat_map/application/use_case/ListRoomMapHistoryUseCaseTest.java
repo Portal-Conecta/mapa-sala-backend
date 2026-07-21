@@ -76,7 +76,7 @@ class ListRoomMapHistoryUseCaseTest {
         RoomMapHistoryResponse response = historyResponse();
 
         when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(classId);
+        when(hubClassPort.belongsToClass(userId, classId)).thenReturn(true);
         when(roomMapHistoryRepository.findByRoomMapIdOrderByCreatedAtDesc(roomMapId, pageable))
                 .thenReturn(new PageImpl<>(List.of(history)));
         when(roomMapHistoryMapper.toResponse(history)).thenReturn(response);
@@ -128,7 +128,7 @@ class ListRoomMapHistoryUseCaseTest {
         RoomMap roomMap = activeRoomMap();
 
         when(roomMapRepository.findById(roomMapId)).thenReturn(Optional.of(roomMap));
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(UUID.randomUUID());
+        when(hubClassPort.belongsToClass(userId, classId)).thenReturn(false);
 
         assertThatThrownBy(() -> useCase.execute(userId, TypeUser.STUDENT, roomMapId, pageable))
                 .isInstanceOf(AccessDeniedException.class);

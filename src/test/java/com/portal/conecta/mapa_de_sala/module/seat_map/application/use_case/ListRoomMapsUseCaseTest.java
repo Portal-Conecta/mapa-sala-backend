@@ -51,7 +51,7 @@ class ListRoomMapsUseCaseTest {
 
     @Test
     void execute_aprendizShouldReceiveOnlyMapsFromOwnClass() {
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(classId);
+        when(hubClassPort.getClassIdsForUser(userId)).thenReturn(List.of(classId));
 
         RoomMap roomMap = roomMap(classId);
         when(roomMapRepository.findByClassIdInAndRemovedAtIsNull(List.of(classId), pageable))
@@ -60,13 +60,13 @@ class ListRoomMapsUseCaseTest {
         Page<?> result = useCase.execute(userId, TypeUser.STUDENT, null, pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        verify(hubClassPort).getClassIdForUser(userId);
+        verify(hubClassPort).getClassIdsForUser(userId);
         verify(roomMapRepository).findByClassIdInAndRemovedAtIsNull(List.of(classId), pageable);
     }
 
     @Test
     void execute_representanteShouldReceiveOnlyMapsFromOwnClass() {
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(classId);
+        when(hubClassPort.getClassIdsForUser(userId)).thenReturn(List.of(classId));
 
         RoomMap roomMap = roomMap(classId);
         when(roomMapRepository.findByClassIdInAndRemovedAtIsNull(List.of(classId), pageable))
@@ -75,7 +75,7 @@ class ListRoomMapsUseCaseTest {
         Page<?> result = useCase.execute(userId, TypeUser.REPRESENTATIVE, null, pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        verify(hubClassPort).getClassIdForUser(userId);
+        verify(hubClassPort).getClassIdsForUser(userId);
         verify(roomMapRepository).findByClassIdInAndRemovedAtIsNull(List.of(classId), pageable);
     }
 
@@ -126,7 +126,7 @@ class ListRoomMapsUseCaseTest {
     @Test
     void execute_aprendizWithSalaIdShouldFilterByRoom() {
         UUID salaId = UUID.randomUUID();
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(classId);
+        when(hubClassPort.getClassIdsForUser(userId)).thenReturn(List.of(classId));
 
         RoomMap roomMap = roomMap(classId);
         when(roomMapRepository.findByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), salaId, pageable))

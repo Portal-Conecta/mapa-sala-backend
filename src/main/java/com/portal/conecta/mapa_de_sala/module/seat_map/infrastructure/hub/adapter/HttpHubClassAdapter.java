@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClientException;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.hub.HubStudent;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
+import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.dto.HubClassMembershipResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.dto.HubStudentResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.exception.HubIntegrationException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.properties.HubApiProperties;
@@ -47,7 +48,7 @@ public class HttpHubClassAdapter implements HubClassPort {
     public List<HubStudent> findStudentsByClassId(UUID classId) {
         try {
             HubStudentResponse[] students = restClient.get()
-                    .uri("/classes/{classId}/students", classId)
+                    .uri("/classes/{classId}/members?role=STUDENT", classId)
                     .retrieve()
                     .body(new ParameterizedTypeReference<HubStudentResponse[]>() {});
 
@@ -66,17 +67,34 @@ public class HttpHubClassAdapter implements HubClassPort {
     }
 
     @Override
-    public UUID getClassIdForUser(UUID userId) {
+    public boolean belongsToClass(UUID userId, UUID classId) {
+        return fetchMemberships(userId).stream()
+                .anyMatch(membership -> classId.equals(membership.id()));
+    }
+
+    @Override
+    public List<UUID> getClassIdsForUser(UUID userId) {
+        return fetchMemberships(userId).stream()
+                .map(HubClassMembershipResponse::id)
+                .toList();
+    }
+
+    private List<HubClassMembershipResponse> fetchMemberships(UUID userId) {
         try {
-            return restClient.get()
+            HubClassMembershipResponse[] memberships = restClient.get()
                     .uri("/users/{userId}/class", userId)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<UUID>() {});
+                    .body(new ParameterizedTypeReference<HubClassMembershipResponse[]>() {});
+
+            if (memberships == null) {
+                return List.of();
+            }
+
+            return Arrays.asList(memberships);
         } catch (HttpClientErrorException.NotFound exception) {
-            return null;
+            return List.of();
         } catch (RestClientException exception) {
             throw new HubIntegrationException("Serviço de turmas do Hub indisponível.", exception);
-        }        
+        }
     }
 }
-

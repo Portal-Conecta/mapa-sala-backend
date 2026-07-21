@@ -34,7 +34,7 @@ public class ListRoomMapsUseCase {
     @Transactional(readOnly = true)
     public Page<RoomMapSummaryResponse> execute(UUID userId, TypeUser userType, UUID salaId, Pageable pageable) {
         Page<RoomMap> page = switch (userType) {
-            case STUDENT, REPRESENTATIVE -> findByClassIds(List.of(hubClassPort.getClassIdForUser(userId)), salaId, pageable);
+            case STUDENT, REPRESENTATIVE -> findByClassIds(hubClassPort.getClassIdsForUser(userId), salaId, pageable);
             case TEACHER -> findByClassIds(hubPermissionPort.getAccessibleClassIds(userId, userType), salaId, pageable);
             case SENAI, WEG, ADMIN -> findAll(salaId, pageable);
         };

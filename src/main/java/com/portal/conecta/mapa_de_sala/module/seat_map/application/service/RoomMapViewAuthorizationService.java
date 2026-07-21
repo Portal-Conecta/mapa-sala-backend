@@ -32,7 +32,7 @@ public class RoomMapViewAuthorizationService {
             return;
         }
         throw new AccessDeniedException(
-                    "The user does not have permission to view this class's map."
+                "The user does not have permission to view this class's map."
         );
     }
 
@@ -42,11 +42,11 @@ public class RoomMapViewAuthorizationService {
 
         return switch (userType){
             case STUDENT, REPRESENTATIVE ->
-                classId.equals(hubClassPort.getClassIdForUser(userId));
+                    hubClassPort.belongsToClass(userId, classId);
             case TEACHER ->
-                hubPermissionPort.getAccessibleClassIds(userId, userType).contains((classId));
+                    hubPermissionPort.getAccessibleClassIds(userId, userType).contains(classId);
             case SENAI, WEG, ADMIN ->
-                true;
+                    true;
         };
     }
 }
