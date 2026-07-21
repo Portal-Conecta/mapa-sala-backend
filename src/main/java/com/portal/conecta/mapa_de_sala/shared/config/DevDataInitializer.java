@@ -6,6 +6,7 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.Conflict
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -29,9 +30,15 @@ import java.util.UUID;
  * no banco, apontando para uma sala que a API depois recusa a servir.
  *
  * <p><strong>Ativo apenas no perfil {@code dev}. Nao deve ser executado em producao.</strong>
+ *
+ * <p>Ativo apenas quando o Hub esta em modo mock ({@code hub.api.mock-enabled=true}):
+ *  * os roomIds usados aqui sao fixos do Mock do Hub e o adapter real ({@code HttpHubRoomAdapter})
+ *  * exige um JWT que nao existe durante o boot (fora do contexto de uma requisicao HTTP),
+ *  * entao rodar isso contra o Hub real sempre falha com 401 e derruba a aplicacao.
  */
 @Configuration
 @Profile("dev")
+@ConditionalOnProperty(prefix = "hub.api", name = "mock-enabled", havingValue = "true")
 @Slf4j
 public class DevDataInitializer {
 
