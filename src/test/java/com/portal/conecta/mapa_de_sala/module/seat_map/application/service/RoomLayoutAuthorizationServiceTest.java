@@ -1,32 +1,27 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.service;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.springframework.security.access.AccessDeniedException;
 
-@ExtendWith(MockitoExtension.class)
 class RoomLayoutAuthorizationServiceTest {
 
-    @Mock
-    private RoomMapRepository roomMapRepository;
-
     private RoomLayoutAuthorizationService authorizationService;
+    private HubRoomPort hubRoomPort;
 
     private final UUID roomId = UUID.randomUUID();
     private final UUID userId = UUID.randomUUID();
@@ -34,48 +29,58 @@ class RoomLayoutAuthorizationServiceTest {
 
     @BeforeEach
     void setUp() {
-        authorizationService = new RoomLayoutAuthorizationService(roomMapRepository);
+        hubRoomPort = mock(HubRoomPort.class);
+        when(hubRoomPort.existsById(roomId)).thenReturn(true);
+        authorizationService = new RoomLayoutAuthorizationService(hubRoomPort);
     }
 
     @Test
-    void mustAllowGlobalProfileWithoutConsultingBank() {
+    void mustAllowGlobalProfile() {
         var user = new RequestContext(userId, TypeUser.SENAI, List.of());
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
                 .doesNotThrowAnyException();
-
-        verifyNoInteractions(roomMapRepository);
     }
 
     @Test
-    void mustAllowTeacherWithClassLinkedtoRoom() {
+    void mustAllowTeacherWithAnyClassLinked() {
         var user = new RequestContext(userId, TypeUser.TEACHER,
                 List.of(new ContextClass(classId, ClassRole.TEACHER)));
-        when(roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), roomId))
-                .thenReturn(true);
 
         assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    void mustDenyTeacherNoClassLinkedRoom() {
-        var user = new RequestContext(userId, TypeUser.TEACHER,
-                List.of(new ContextClass(classId, ClassRole.TEACHER)));
-        when(roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(List.of(classId), roomId))
-                .thenReturn(false);
+    void mustDenyTeacherWithoutClassInToken() {
+        var user = new RequestContext(userId, TypeUser.TEACHER, List.of());
 
         assertThatThrownBy(() -> authorizationService.checkReadAccess(user, roomId))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
-    void mustDenyProfessorWithoutNoTurmaNoToken() {
-        var user = new RequestContext(userId, TypeUser.TEACHER, List.of());
+    void mustDenyNullUser() {
+        assertThatThrownBy(() -> authorizationService.checkReadAccess(null, roomId))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void mustDenyWhenRoomDoesNotExistInHub() {
+        var user = new RequestContext(userId, TypeUser.TEACHER,
+                List.of(new ContextClass(classId, ClassRole.TEACHER)));
+        when(hubRoomPort.existsById(roomId)).thenReturn(false);
 
         assertThatThrownBy(() -> authorizationService.checkReadAccess(user, roomId))
-                .isInstanceOf(AccessDeniedException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
 
-        verifyNoInteractions(roomMapRepository);
+    @Test
+    void mustNotCheckRoomExistenceForGlobalProfile() {
+        var user = new RequestContext(userId, TypeUser.SENAI, List.of());
+        when(hubRoomPort.existsById(roomId)).thenReturn(false);
+
+        assertThatCode(() -> authorizationService.checkReadAccess(user, roomId))
+                .doesNotThrowAnyException();
     }
 }

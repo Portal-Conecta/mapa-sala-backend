@@ -2,6 +2,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.adapt
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,10 +18,13 @@ import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.dto.Hu
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.dto.HubStudentResponse;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.exception.HubIntegrationException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.infrastructure.hub.properties.HubApiProperties;
+import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 
 @Component
 @ConditionalOnProperty(prefix = "hub.api", name = "mock-enabled", havingValue = "false")
 public class HttpHubClassAdapter implements HubClassPort {
+
+    private static final Set<String> STUDENT_ROLES = Set.of(ClassRole.STUDENT.name(), ClassRole.REPRESENTATIVE.name());
 
     private final RestClient restClient;
 
@@ -47,17 +51,18 @@ public class HttpHubClassAdapter implements HubClassPort {
     @Override
     public List<HubStudent> findStudentsByClassId(UUID classId) {
         try {
-            HubStudentResponse[] students = restClient.get()
-                    .uri("/classes/{classId}/members?role=STUDENT", classId)
+            HubStudentResponse[] members = restClient.get()
+                    .uri("/classes/{classId}/members", classId)
                     .retrieve()
                     .body(new ParameterizedTypeReference<HubStudentResponse[]>() {});
 
-            if (students == null) {
+            if (members == null) {
                 return List.of();
             }
 
-            return Arrays.stream(students)
-                    .map(student -> new HubStudent(student.id(), student.name()))
+            return Arrays.stream(members)
+                    .filter(member -> member.classRole() != null && STUDENT_ROLES.contains(member.classRole()))
+                    .map(member -> new HubStudent(member.id(), member.name()))
                     .toList();
         } catch (HttpClientErrorException.NotFound exception) {
             return List.of();
