@@ -1,88 +1,96 @@
 package com.portal.conecta.mapa_de_sala.shared.config;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.command.CreateRoomLayoutCommand;
-import com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case.CreateRoomLayoutUseCase;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.LayoutTemplate;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomLayout;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.LayoutTemplateRepository;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomLayoutRepository;
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import java.util.UUID;
-
 /**
- * Cria vinculos RoomLayout (sala do Hub -> template de layout) para o perfil {@code dev}.
+ * Vincula, no perfil de desenvolvimento, as salas deterministicas do Hub aos
+ * templates de layout definidos na migration do catalogo.
  *
- * <p>Os templates e posicoes ja sao populados pela migration Flyway com UUIDs fixos.
- * Este seed apenas vincula salas fisicas (roomIds do Mock do Hub, ver
- * {@code hub.mock.room-ids} em application-dev.yaml) aos templates existentes,
- * permitindo testar os endpoints de mapa de sala com dados realistas sem precisar
- * chamar o POST /api/layouts/salas manualmente a cada subida do ambiente.
- *
- * <p>Delega para {@link CreateRoomLayoutUseCase#execute}, o mesmo caminho usado pela
- * API, em vez de persistir o RoomLayout diretamente. Isso garante que o seed respeita
- * a mesma validação de existência da sala no Hub ({@code HubRoomPort#existsById}) que
- * a API aplicaria — se o roomId hardcoded aqui não corresponder a uma sala conhecida
- * pelo Hub (mock ou real), o seed avisa e segue em vez de deixar um RoomLayout orfão
- * no banco, apontando para uma sala que a API depois recusa a servir.
- *
- * <p><strong>Ativo apenas no perfil {@code dev}. Nao deve ser executado em producao.</strong>
- *
- * <p>Ativo apenas quando o Hub esta em modo mock ({@code hub.api.mock-enabled=true}):
- *  * os roomIds usados aqui sao fixos do Mock do Hub e o adapter real ({@code HttpHubRoomAdapter})
- *  * exige um JWT que nao existe durante o boot (fora do contexto de uma requisicao HTTP),
- *  * entao rodar isso contra o Hub real sempre falha com 401 e derruba a aplicacao.
+ * <p>O seed nao consulta o Hub durante o boot porque esses endpoints exigem
+ * autenticacao. Os IDs das salas sao o contrato estabelecido pelo
+ * {@code DevDataInitializer} do Core.</p>
  */
 @Configuration
 @Profile("dev")
-@ConditionalOnProperty(prefix = "hub.api", name = "mock-enabled", havingValue = "true")
 @Slf4j
 public class DevDataInitializer {
 
-    private static final UUID TEMPLATE_A_ID = UUID.fromString("00000000-0000-0000-0001-000000000001"); // 9x4, prof x=0
-    private static final UUID TEMPLATE_B_ID = UUID.fromString("00000000-0000-0000-0002-000000000001"); // 9x4, prof x=8
-    private static final UUID TEMPLATE_C_ID = UUID.fromString("00000000-0000-0000-0003-000000000001"); // 5x7, prof x=0
-    private static final UUID TEMPLATE_D_ID = UUID.fromString("00000000-0000-0000-0004-000000000001"); // 10x4, prof x=9
-    private static final UUID TEMPLATE_E_ID = UUID.fromString("00000000-0000-0000-0005-000000000001"); // 9x5, Lab 101
-    private static final UUID TEMPLATE_F_ID = UUID.fromString("00000000-0000-0000-0006-000000000001"); // 13x3
-    private static final UUID TEMPLATE_G_ID = UUID.fromString("00000000-0000-0000-0007-000000000001"); // 7x5
+    private static final UUID TEMPLATE_A_ID = UUID.fromString("00000000-0000-0000-0001-000000000001");
+    private static final UUID TEMPLATE_B_ID = UUID.fromString("00000000-0000-0000-0002-000000000001");
+    private static final UUID TEMPLATE_C_ID = UUID.fromString("00000000-0000-0000-0003-000000000001");
+    private static final UUID TEMPLATE_D_ID = UUID.fromString("00000000-0000-0000-0004-000000000001");
+    private static final UUID TEMPLATE_E_ID = UUID.fromString("00000000-0000-0000-0005-000000000001");
+    private static final UUID TEMPLATE_F_ID = UUID.fromString("00000000-0000-0000-0006-000000000001");
 
-    private static final UUID ROOM_101_ID = UUID.fromString("5fe5c746-4b1a-43c2-8f01-a8a137875c57"); // CLASSROOM
-    private static final UUID ROOM_201_ID = UUID.fromString("e7dda250-0987-4b61-aa78-d242e5baaf8c"); // LABORATORY
+    private static final List<RoomLayoutSeed> ROOM_LAYOUTS = List.of(
+            new RoomLayoutSeed(101, TEMPLATE_E_ID),
+            new RoomLayoutSeed(102, TEMPLATE_F_ID),
+            new RoomLayoutSeed(103, TEMPLATE_F_ID),
+            new RoomLayoutSeed(109, TEMPLATE_F_ID),
+            new RoomLayoutSeed(110, TEMPLATE_F_ID),
+            new RoomLayoutSeed(201, TEMPLATE_A_ID),
+            new RoomLayoutSeed(202, TEMPLATE_B_ID),
+            new RoomLayoutSeed(203, TEMPLATE_C_ID),
+            new RoomLayoutSeed(204, TEMPLATE_A_ID),
+            new RoomLayoutSeed(205, TEMPLATE_B_ID),
+            new RoomLayoutSeed(206, TEMPLATE_B_ID),
+            new RoomLayoutSeed(207, TEMPLATE_D_ID),
+            new RoomLayoutSeed(212, TEMPLATE_A_ID),
+            new RoomLayoutSeed(213, TEMPLATE_A_ID),
+            new RoomLayoutSeed(214, TEMPLATE_B_ID)
+    );
 
     @Bean
-    public CommandLineRunner seedSeatMapDevData(CreateRoomLayoutUseCase createRoomLayoutUseCase) {
+    public CommandLineRunner seedSeatMapDevData(
+            RoomLayoutRepository roomLayoutRepository,
+            LayoutTemplateRepository layoutTemplateRepository
+    ) {
         return args -> {
             log.info("[DEV SEED][seat_map] Iniciando vinculos RoomLayout para dev...");
-
-            linkRoomToTemplate(createRoomLayoutUseCase,
-                    ROOM_101_ID, TEMPLATE_E_ID, "Sala 101 -> Template E (Lab Eletrotecnica 9x5)");
-
-            linkRoomToTemplate(createRoomLayoutUseCase,
-                    ROOM_201_ID, TEMPLATE_A_ID, "Sala 201 -> Template A (Sala de Aula 9x4, prof x=0)");
-
-            log.info("[DEV SEED][seat_map] Vinculos RoomLayout concluidos. "
-                    + "Templates B, C, D, F, G ainda sem sala real vinculada "
-                    + "(nao ha roomId disponivel no Mock do Hub para elas).");
+            ROOM_LAYOUTS.forEach(seed -> linkRoomToTemplate(roomLayoutRepository, layoutTemplateRepository, seed));
+            log.info("[DEV SEED][seat_map] Vinculos RoomLayout concluidos para {} salas. "
+                    + "Template G nao foi vinculado porque a massa do Hub nao possui a sala 209/211.", ROOM_LAYOUTS.size());
         };
     }
 
     private void linkRoomToTemplate(
-            CreateRoomLayoutUseCase createRoomLayoutUseCase,
-            UUID roomId,
-            UUID templateId,
-            String label
+            RoomLayoutRepository roomLayoutRepository,
+            LayoutTemplateRepository layoutTemplateRepository,
+            RoomLayoutSeed seed
     ) {
-        try {
-            createRoomLayoutUseCase.execute(new CreateRoomLayoutCommand(roomId, templateId));
-            log.info("[DEV SEED][seat_map] Criado: {} (roomId={}, layoutTemplateId={})", label, roomId, templateId);
-        } catch (ConflictException e) {
-            log.info("[DEV SEED][seat_map] {} ja possui vinculo. Pulado.", label);
-        } catch (ResourceNotFoundException e) {
-            log.warn("[DEV SEED][seat_map] {} nao pode ser vinculado: {}", label, e.getMessage());
+        UUID roomId = seed.roomId();
+        if (roomLayoutRepository.findByRoomId(roomId).isPresent()) {
+            log.info("[DEV SEED][seat_map] Sala {} ja possui vinculo. Pulado.", seed.roomNumber());
+            return;
+        }
+
+        LayoutTemplate template = layoutTemplateRepository.findByIdAndActiveTrue(seed.templateId()).orElse(null);
+        if (template == null) {
+            log.warn("[DEV SEED][seat_map] Template {} da sala {} nao foi encontrado. Pulado.",
+                    seed.templateId(), seed.roomNumber());
+            return;
+        }
+
+        RoomLayout roomLayout = new RoomLayout();
+        roomLayout.setRoomId(roomId);
+        roomLayout.setLayoutTemplate(template);
+        roomLayoutRepository.save(roomLayout);
+        log.info("[DEV SEED][seat_map] Criado: Sala {} -> template {}.", seed.roomNumber(), template.getName());
+    }
+
+    private record RoomLayoutSeed(int roomNumber, UUID templateId) {
+        private UUID roomId() {
+            return UUID.fromString("00000000-0000-0000-0000-%012d".formatted(roomNumber));
         }
     }
 }
