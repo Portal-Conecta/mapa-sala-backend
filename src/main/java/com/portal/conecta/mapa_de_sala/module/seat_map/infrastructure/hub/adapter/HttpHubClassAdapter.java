@@ -61,7 +61,7 @@ public class HttpHubClassAdapter implements HubClassPort {
             }
 
             return Arrays.stream(members)
-                    .filter(member -> STUDENT_ROLES.contains(member.classRole()))
+                    .filter(member -> member.classRole() != null && STUDENT_ROLES.contains(member.classRole()))
                     .map(member -> new HubStudent(member.id(), member.name()))
                     .toList();
         } catch (HttpClientErrorException.NotFound exception) {
