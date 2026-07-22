@@ -2,6 +2,7 @@ package com.portal.conecta.mapa_de_sala.module.seat_map.application.service;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubPermissionPort;
+import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
 
@@ -34,8 +35,7 @@ class RoomMapViewAuthorizationServiceTest {
     private RoomMapViewAuthorizationService service;
 
     private RequestContext context(UUID userId, TypeUser type) {
-        // Ajuste para o construtor real do RequestContext do seat_map.
-        return new RequestContext(userId, type, List.of());
+        return new RequestContext(userId, type, List.<ContextClass>of());
     }
 
     // --- STUDENT / REPRESENTATIVE: só a própria turma ---
@@ -46,7 +46,7 @@ class RoomMapViewAuthorizationServiceTest {
     void allowsStudentOnOwnClass(TypeUser type) {
         UUID userId = UUID.randomUUID();
         UUID turmaId = UUID.randomUUID();
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(turmaId);
+        when(hubClassPort.belongsToClass(userId, turmaId)).thenReturn(true);
 
         assertThatCode(() -> service.ensureCanViewClass(context(userId, type), turmaId))
                 .doesNotThrowAnyException();
@@ -57,9 +57,8 @@ class RoomMapViewAuthorizationServiceTest {
     @DisplayName("STUDENT/REPRESENTATIVE é barrado em turma alheia")
     void deniesStudentOnOtherClass(TypeUser type) {
         UUID userId = UUID.randomUUID();
-        UUID ownClass = UUID.randomUUID();
         UUID otherClass = UUID.randomUUID();
-        when(hubClassPort.getClassIdForUser(userId)).thenReturn(ownClass);
+        when(hubClassPort.belongsToClass(userId, otherClass)).thenReturn(false);
 
         assertThatThrownBy(() -> service.ensureCanViewClass(context(userId, type), otherClass))
                 .isInstanceOf(AccessDeniedException.class);

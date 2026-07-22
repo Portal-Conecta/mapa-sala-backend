@@ -6,9 +6,7 @@
       url: ${DB_URL:jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
       username: ${DB_USERNAME:sa}
       password: ${DB_PASSWORD:sa}
-      driver-class-name: org.h2.Driver
     jpa:
-      database-platform: org.hibernate.dialect.H2Dialect
       hibernate:
         ddl-auto: none
       show-sql: true
@@ -31,6 +29,8 @@
         - cccccccc-cccc-cccc-cccc-cccccccccccc
       room-ids:
         - 11111111-1111-1111-1111-111111111111
+        - 5fe5c746-4b1a-43c2-8f01-a8a137875c57
+        - e7dda250-0987-4b61-aa78-d242e5baaf8c
       students-by-class:
         bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb:
           - id: dddddddd-dddd-dddd-dddd-dddddddddddd

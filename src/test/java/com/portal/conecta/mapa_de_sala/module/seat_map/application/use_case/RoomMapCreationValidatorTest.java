@@ -1,15 +1,9 @@
-package com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+package com.portal.conecta.mapa_de_sala.module.seat_map.application.use_case;
 
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ConflictException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.model.RoomMap;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.policy.RoomMapCreationValidator;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubClassPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
@@ -17,12 +11,20 @@ import com.portal.conecta.mapa_de_sala.shared.context.ClassRole;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+
 
 class RoomMapCreationValidatorTest {
 

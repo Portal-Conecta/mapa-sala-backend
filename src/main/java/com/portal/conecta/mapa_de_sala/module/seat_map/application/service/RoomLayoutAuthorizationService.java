@@ -1,6 +1,7 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.service;
 
-import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.RoomMapRepository;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
@@ -14,12 +15,24 @@ import java.util.UUID;
 @Service
 public class RoomLayoutAuthorizationService {
 
-    private final RoomMapRepository roomMapRepository;
+    private final HubRoomPort hubRoomPort;
 
-    public RoomLayoutAuthorizationService(RoomMapRepository roomMapRepository) {
-        this.roomMapRepository = roomMapRepository;
+    public RoomLayoutAuthorizationService(HubRoomPort hubRoomPort) {
+        this.hubRoomPort = hubRoomPort;
     }
 
+    /**
+     * Autoriza a leitura do layout físico (grid e posições) de uma sala.
+     *
+     * <p>O layout não é dado sensível por turma — não expõe alocações nem alunos —,
+     * então a checagem exige apenas que o usuário tenha algum vínculo de turma real
+     * (extraído do próprio token, já validado pelo Hub), sem depender de já existir
+     * um {@code RoomMap} salvo para essa sala. Exigir um RoomMap pré-existente
+     * impediria a primeira criação de mapa para qualquer sala nova.</p>
+     *
+     * <p>Ainda assim, o {@code roomId} precisa corresponder a uma sala real do Hub —
+     * caso contrário qualquer UUID seria aceito, permitindo enumeração de salas.</p>
+     */
     public void checkReadAccess(RequestContext user, UUID roomId) {
         if (user == null) {
             throw new AccessDeniedException("Acesso negado à sala solicitada");
@@ -37,8 +50,18 @@ public class RoomLayoutAuthorizationService {
             throw new AccessDeniedException("Acesso negado à sala solicitada");
         }
 
-        if (!roomMapRepository.existsByClassIdInAndRoomIdAndRemovedAtIsNull(classIds, roomId)) {
-            throw new AccessDeniedException("Acesso negado à sala solicitada");
+        if (!hubRoomPort.existsById(roomId)) {
+            throw new ResourceNotFoundException("Sala", roomId);
+        }
+    }
+
+    /**
+     * Restringe a criação de vínculo sala-layout aos perfis globais que também
+     * criam salas no Hub (ADMIN, SENAI, WEG).
+     */
+    public void checkWriteAccess(RequestContext user) {
+        if (user == null || !isGlobalProfile(user.userType())) {
+            throw new AccessDeniedException("Perfil sem permissão para vincular layout à sala.");
         }
     }
 
