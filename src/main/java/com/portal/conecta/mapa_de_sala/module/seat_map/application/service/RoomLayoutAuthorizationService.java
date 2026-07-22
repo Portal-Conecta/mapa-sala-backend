@@ -1,5 +1,7 @@
 package com.portal.conecta.mapa_de_sala.module.seat_map.application.service;
 
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.exception.ResourceNotFoundException;
+import com.portal.conecta.mapa_de_sala.module.seat_map.domain.port.HubRoomPort;
 import com.portal.conecta.mapa_de_sala.shared.context.ContextClass;
 import com.portal.conecta.mapa_de_sala.shared.context.RequestContext;
 import com.portal.conecta.mapa_de_sala.shared.context.TypeUser;
@@ -13,6 +15,12 @@ import java.util.UUID;
 @Service
 public class RoomLayoutAuthorizationService {
 
+    private final HubRoomPort hubRoomPort;
+
+    public RoomLayoutAuthorizationService(HubRoomPort hubRoomPort) {
+        this.hubRoomPort = hubRoomPort;
+    }
+
     /**
      * Autoriza a leitura do layout físico (grid e posições) de uma sala.
      *
@@ -21,6 +29,9 @@ public class RoomLayoutAuthorizationService {
      * (extraído do próprio token, já validado pelo Hub), sem depender de já existir
      * um {@code RoomMap} salvo para essa sala. Exigir um RoomMap pré-existente
      * impediria a primeira criação de mapa para qualquer sala nova.</p>
+     *
+     * <p>Ainda assim, o {@code roomId} precisa corresponder a uma sala real do Hub —
+     * caso contrário qualquer UUID seria aceito, permitindo enumeração de salas.</p>
      */
     public void checkReadAccess(RequestContext user, UUID roomId) {
         if (user == null) {
@@ -37,6 +48,10 @@ public class RoomLayoutAuthorizationService {
 
         if (classIds.isEmpty()) {
             throw new AccessDeniedException("Acesso negado à sala solicitada");
+        }
+
+        if (!hubRoomPort.existsById(roomId)) {
+            throw new ResourceNotFoundException("Sala", roomId);
         }
     }
 

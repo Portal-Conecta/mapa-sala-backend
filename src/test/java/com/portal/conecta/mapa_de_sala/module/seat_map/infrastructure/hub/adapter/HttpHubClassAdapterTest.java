@@ -131,4 +131,31 @@ class HttpHubClassAdapterTest {
         assertThatThrownBy(() -> adapter.getClassIdsForUser(userId))
                 .isInstanceOf(HubIntegrationException.class);
     }
+
+    @Test
+    void findStudentsByClassId_shouldKeepOnlyStudentAndRepresentativeRoles() {
+        UUID studentId = UUID.randomUUID();
+        UUID representativeId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID unknownRoleId = UUID.randomUUID();
+        UUID nullRoleId = UUID.randomUUID();
+
+        String body = """
+                [
+                    {"id":"%s","name":"Aluno","classRole":"STUDENT"},
+                    {"id":"%s","name":"Representante","classRole":"REPRESENTATIVE"},
+                    {"id":"%s","name":"Professor","classRole":"TEACHER"},
+                    {"id":"%s","name":"Coordenador","classRole":"COORDINATOR"},
+                    {"id":"%s","name":"SemRole","classRole":null}
+                ]
+                """.formatted(studentId, representativeId, teacherId, unknownRoleId, nullRoleId);
+
+        mockServer.expect(requestTo(HUB_URL + "/classes/" + classId + "/members"))
+                .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+
+        var result = adapter.findStudentsByClassId(classId);
+
+        assertThat(result).extracting("id")
+                .containsExactlyInAnyOrder(studentId, representativeId);
+    }
 }
