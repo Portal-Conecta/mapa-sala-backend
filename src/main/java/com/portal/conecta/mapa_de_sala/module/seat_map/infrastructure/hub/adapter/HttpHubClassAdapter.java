@@ -47,17 +47,18 @@ public class HttpHubClassAdapter implements HubClassPort {
     @Override
     public List<HubStudent> findStudentsByClassId(UUID classId) {
         try {
-            HubStudentResponse[] students = restClient.get()
-                    .uri("/classes/{classId}/members?role=STUDENT", classId)
+            HubStudentResponse[] members = restClient.get()
+                    .uri("/classes/{classId}/members", classId)
                     .retrieve()
                     .body(new ParameterizedTypeReference<HubStudentResponse[]>() {});
 
-            if (students == null) {
+            if (members == null) {
                 return List.of();
             }
 
-            return Arrays.stream(students)
-                    .map(student -> new HubStudent(student.id(), student.name()))
+            return Arrays.stream(members)
+                    .filter(member -> !"TEACHER".equals(member.classRole()))
+                    .map(member -> new HubStudent(member.id(), member.name()))
                     .toList();
         } catch (HttpClientErrorException.NotFound exception) {
             return List.of();

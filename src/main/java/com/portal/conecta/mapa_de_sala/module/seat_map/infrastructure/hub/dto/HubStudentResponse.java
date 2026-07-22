@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record HubStudentResponse(
         UUID id,
-        String name
+        String name,
+        String classRole
 ) {
 }
