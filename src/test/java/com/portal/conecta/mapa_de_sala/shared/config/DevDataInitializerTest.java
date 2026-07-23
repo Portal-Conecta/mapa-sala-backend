@@ -38,7 +38,7 @@ class DevDataInitializerTest {
         new DevDataInitializer().seedSeatMapDevData(roomLayoutRepository, layoutTemplateRepository).run();
 
         ArgumentCaptor<RoomLayout> layouts = ArgumentCaptor.forClass(RoomLayout.class);
-        verify(roomLayoutRepository, times(15)).save(layouts.capture());
+        verify(roomLayoutRepository, times(16)).save(layouts.capture());
 
         Map<UUID, UUID> roomTemplates = layouts.getAllValues().stream()
                 .collect(Collectors.toMap(RoomLayout::getRoomId, layout -> layout.getLayoutTemplate().getId()));
@@ -53,7 +53,7 @@ class DevDataInitializerTest {
 
         new DevDataInitializer().seedSeatMapDevData(roomLayoutRepository, layoutTemplateRepository).run();
 
-        verify(roomLayoutRepository, times(15)).findByRoomId(any(UUID.class));
+        verify(roomLayoutRepository, times(16)).findByRoomId(any(UUID.class));
         verifyNoInteractions(layoutTemplateRepository);
         verify(roomLayoutRepository, org.mockito.Mockito.never()).save(any(RoomLayout.class));
     }
@@ -76,6 +76,7 @@ class DevDataInitializerTest {
         UUID templateD = uuid("00000000-0000-0000-0004-000000000001");
         UUID templateE = uuid("00000000-0000-0000-0005-000000000001");
         UUID templateF = uuid("00000000-0000-0000-0006-000000000001");
+        UUID templateG = uuid("00000000-0000-0000-0007-000000000001");
 
         return Map.ofEntries(
                 Map.entry(room(101), templateE),
@@ -84,7 +85,8 @@ class DevDataInitializerTest {
                 Map.entry(room(201), templateA), Map.entry(room(202), templateB),
                 Map.entry(room(203), templateC), Map.entry(room(204), templateA),
                 Map.entry(room(205), templateB), Map.entry(room(206), templateB),
-                Map.entry(room(207), templateD), Map.entry(room(212), templateA),
+                Map.entry(room(207), templateD), Map.entry(room(211), templateG),
+                Map.entry(room(212), templateA),
                 Map.entry(room(213), templateA), Map.entry(room(214), templateB)
         );
     }

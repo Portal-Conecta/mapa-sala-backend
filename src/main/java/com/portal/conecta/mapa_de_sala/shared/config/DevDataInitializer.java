@@ -31,6 +31,7 @@ public class DevDataInitializer {
     private static final UUID TEMPLATE_D_ID = UUID.fromString("00000000-0000-0000-0004-000000000001");
     private static final UUID TEMPLATE_E_ID = UUID.fromString("00000000-0000-0000-0005-000000000001");
     private static final UUID TEMPLATE_F_ID = UUID.fromString("00000000-0000-0000-0006-000000000001");
+    private static final UUID TEMPLATE_G_ID = UUID.fromString("00000000-0000-0000-0007-000000000001");
 
     private static final List<RoomLayoutSeed> ROOM_LAYOUTS = List.of(
             new RoomLayoutSeed(101, TEMPLATE_E_ID),
@@ -45,6 +46,7 @@ public class DevDataInitializer {
             new RoomLayoutSeed(205, TEMPLATE_B_ID),
             new RoomLayoutSeed(206, TEMPLATE_B_ID),
             new RoomLayoutSeed(207, TEMPLATE_D_ID),
+            new RoomLayoutSeed(211, TEMPLATE_G_ID),
             new RoomLayoutSeed(212, TEMPLATE_A_ID),
             new RoomLayoutSeed(213, TEMPLATE_A_ID),
             new RoomLayoutSeed(214, TEMPLATE_B_ID)
@@ -58,8 +60,7 @@ public class DevDataInitializer {
         return args -> {
             log.info("[DEV SEED][seat_map] Iniciando vinculos RoomLayout para dev...");
             ROOM_LAYOUTS.forEach(seed -> linkRoomToTemplate(roomLayoutRepository, layoutTemplateRepository, seed));
-            log.info("[DEV SEED][seat_map] Vinculos RoomLayout concluidos para {} salas. "
-                    + "Template G nao foi vinculado porque a massa do Hub nao possui a sala 209/211.", ROOM_LAYOUTS.size());
+            log.info("[DEV SEED][seat_map] Vinculos RoomLayout concluidos para {} salas.", ROOM_LAYOUTS.size());
         };
     }
 
