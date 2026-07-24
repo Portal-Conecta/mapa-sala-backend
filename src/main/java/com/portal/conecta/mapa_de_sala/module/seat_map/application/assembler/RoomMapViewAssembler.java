@@ -25,8 +25,6 @@ import java.util.UUID;
 @Component
 public class RoomMapViewAssembler {
 
-    private static final String UNKNOWN_STUDENT = "Aluno não encontrado no Hub";
-
     private static final Comparator<LayoutPosition> READING_ORDER =
             Comparator.comparingInt(LayoutPosition::getPositionY)
                     .thenComparingInt(LayoutPosition::getPositionX);
@@ -50,9 +48,10 @@ public class RoomMapViewAssembler {
 
         List<RoomMapAllocationResponse> allocations = locations.stream()
                 .filter(location -> numbering.seatNumberOf(location.getLayoutPositionId()) != null)
+                .filter(location -> nameById.containsKey(location.getStudentId()))
                 .map(location -> new RoomMapAllocationResponse(
                         location.getStudentId(),
-                        nameById.getOrDefault(location.getStudentId(), UNKNOWN_STUDENT),
+                        nameById.get(location.getStudentId()),
                         numbering.seatNumberOf(location.getLayoutPositionId()),
                         location.getLayoutPositionId()))
                 .sorted(Comparator.comparing(RoomMapAllocationResponse::seatNumber))

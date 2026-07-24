@@ -238,8 +238,8 @@ class RoomMapViewAssemblerTest {
     }
 
     @Test
-    @DisplayName("mapa salvo usa nome padrão quando aluno alocado não está na turma do Hub")
-    void savedMapUsesFallbackNameForUnknownStudent() {
+    @DisplayName("mapa salvo ignora alocação de aluno que não está mais na turma do Hub")
+    void savedMapIgnoresAllocationForStudentNoLongerInHubClass() {
         RoomMap roomMap = mock(RoomMap.class);
         when(roomMapMapper.toResponse(roomMap)).thenReturn(mock(RoomMapResponse.class));
 
@@ -251,9 +251,7 @@ class RoomMapViewAssemblerTest {
                 List.of(locationUnknown),
                 List.of());
 
-        assertThat(response.allocations())
-                .extracting("studentName")
-                .containsExactly("Aluno não encontrado no Hub");
+        assertThat(response.allocations()).isEmpty();
     }
 
     @Test
